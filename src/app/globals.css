@@ -1,26 +1,58 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme{
+/* Prussian Blue */
+--color-prussian_blue: "#053247";
+--color-prussian_blue-5: "#ECF8FE";
+--color-prussian_blue-25: "#B1E2FB";
+--color-prussian_blue-50: "#8BD4F9";
+--color-prussian_blue-100: "#64C6F7";
+--color-prussian_blue-200: "#54C0F2";
+--color-prussian_blue-300: "#3DB8F5";
+--color-prussian_blue-400: "#16A9F3";
+--color-prussian_blue-500: "#0B92D5";
+--color-prussian_blue-600: "#0977AE";
+--color-prussian_blue-700: "#075D88";
+--color-prussian_blue-800: "#054261";
+--color-prussian_blue-900: "#03283A";
+--color-prussian_blue-950: "#010D13";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Munsell Blue */
+-color-munsell_blue: "#298E9E";
+--color-munsell_blue-5: "#DEF5F7";
+--color-munsell_blue-25: "#DEF5F7";
+--color-munsell_blue-50: "#BDEBEF";
+--color-munsell_blue-100: "#F5F9F9";
+--color-munsell_blue-200: "#E9F3F4";
+--color-munsell_blue-300: "#5BCDD7";
+--color-munsell_blue-400: "#3AC3CF";
+--color-munsell_blue-500: "#2CA9B5";
+--color-munsell_blue-600: "#248A94";
+--color-munsell_blue-700: "#1C6C73";
+--color-munsell_blue-800: "#144D52";
+--color-munsell_blue-900: "#0C2E31";
+--color-munsell_blue-950: "#040F10";
+
+
+/* Primary */
+--color-primary: "#F7F7F7";
+--color-primary-5: "#EBEBEB";
+--color-primary-25: "#E0E0E0";
+--color-primary-50: "#D6D6D6";
+--color-primary-100: "#C2C2C2";
+--color-primary-200: "#ADADAD";
+--color-primary-300: "#999999";
+--color-primary-400: "#858585";
+--color-primary-500: "#707070";
+--color-primary-600: "#5C5C5C";
+--color-primary-700: "#474747";
+--color-primary-800: "#333333";
+--color-primary-900: "#1F1F1F";
+--color-primary-950: "#141414";
+
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Full Prisma schema converted from your SQL
+
+// enums
+enum LicenseStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+model Category {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  businesses Business[] @relation("BusinessCategory")
+}
+
+model Currency {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  businesses Business[]
+}
+
+model Status {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  licenses License[]
+}
+
+model Country {
+  id         Int        @id @default(autoincrement())
+  code       String     @unique
+  name       String     @unique
+  states     State[]
+  businesses Business[]
+}
+
+model State {
+  id         Int        @id @default(autoincrement())
+  name       String
+  countryId  Int
+  country    Country    @relation(fields: [countryId], references: [id])
+  businesses Business[]
+}
+
+model Business {
+  id                Int    @id @default(autoincrement())
+  business_name     String
+  categoryId        Int
+  gst_no            String
+  business_branches Int
+  no_of_staff       Int
+  countryId         Int
+  stateId           Int
+  currencyId        Int
+
+  category Category  @relation("BusinessCategory", fields: [categoryId], references: [id])
+  country  Country   @relation(fields: [countryId], references: [id])
+  state    State     @relation(fields: [stateId], references: [id])
+  currency Currency  @relation(fields: [currencyId], references: [id])
+  users    User[]
+  licenses License[]
+}
+
+model License {
+  key        String   @id @default(uuid())
+  businessId Int
+  statusId   Int
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+  status   Status   @relation(fields: [statusId], references: [id])
+}
+
+model User {
+  id         Int     @id @default(autoincrement())
+  businessId Int
+  is_admin   Boolean
+  name       String
+  email      String
+  phone      String
+
+  business Business @relation(fields: [businessId], references: [id])
+}
