@@ -59,24 +59,29 @@ model Business {
   no_of_staff       Int
   countryId         Int
   stateId           Int
-  currencyId        Int
 
-  category Category  @relation("BusinessCategory", fields: [categoryId], references: [id])
-  country  Country   @relation(fields: [countryId], references: [id])
-  state    State     @relation(fields: [stateId], references: [id])
-  currency Currency  @relation(fields: [currencyId], references: [id])
-  users    User[]
-  licenses License[]
+  category   Category  @relation("BusinessCategory", fields: [categoryId], references: [id])
+  country    Country   @relation(fields: [countryId], references: [id])
+  state      State     @relation(fields: [stateId], references: [id])
+  users      User[]
+  licenses   License[]
+  payments   Payment[]
+  Currency   Currency? @relation(fields: [currencyId], references: [id])
+  currencyId Int?
 }
 
 model License {
-  key        String   @id @default(uuid())
-  businessId Int
-  statusId   Int
-  createdAt  DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  keyEncrypted String
+  iv           String
+  businessId   Int
+  statusId     Int
+  staffLimit   Int
+  createdAt    DateTime @default(now())
 
-  business Business @relation(fields: [businessId], references: [id])
-  status   Status   @relation(fields: [statusId], references: [id])
+  business Business  @relation(fields: [businessId], references: [id])
+  status   Status    @relation(fields: [statusId], references: [id])
+  payments Payment[] // One license has many payments
 }
 
 model User {
@@ -87,5 +92,43 @@ model User {
   email      String
   phone      String
 
+  business Business  @relation(fields: [businessId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id                Int       @id @default(autoincrement())
+  razorpayOrderId   String    @unique
+  razorpayPaymentId String? // filled after successful payment
+  razorpaySignature String? // for payment verification
+  amount            Int // store in smallest unit (e.g., paisa)
+  currency          String    @default("INR")
+  status            String    @default("CREATED") // CREATED, SUCCESS, FAILED
+  createdAt         DateTime  @default(now())
+  paidAt            DateTime?
+
+  licenseId  Int? // Nullable if payment not yet linked
+  userId     Int
+  businessId Int
+  planId     Int?
+
+  user     User     @relation(fields: [userId], references: [id])
   business Business @relation(fields: [businessId], references: [id])
+  license  License? @relation(fields: [licenseId], references: [id])
+  plan     Plan?    @relation(fields: [planId], references: [id])
+}
+
+model Plan {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  description   String?
+  features      String[] // JSON array of features
+  price         String // smallest currency unit
+  originalPrice String // original price before discounts
+  isPopular     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payments Payment[]
 }

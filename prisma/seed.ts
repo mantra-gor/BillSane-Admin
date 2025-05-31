@@ -324,7 +324,100 @@ const countriesWithStates = [
 const statuses = ["Pending", "Active", "Expired", "Revoked"];
 
 // Currencies
-const currencies = ["INR", "USD", "EUR", "GBP", "JPY", "CNY", "CAD", "BRL"];
+const currencies = [
+  {
+    code: "INR",
+    name: "Indian Rupee",
+  },
+  {
+    code: "USD",
+    name: "US Dollar",
+  },
+  {
+    code: "EUR",
+    name: "Euro",
+  },
+  {
+    code: "GBP",
+    name: "British Pound",
+  },
+  {
+    code: "JPY",
+    name: "Japanese Yen",
+  },
+  {
+    code: "CNY",
+    name: "Chinese Yuan",
+  },
+  {
+    code: "CAD",
+    name: "Canadian Dollar",
+  },
+  {
+    code: "BRL",
+    name: "Brazilian Real",
+  },
+];
+
+// Plans
+
+const plans = [
+  {
+    name: "Starter",
+    price: "10900",
+    originalPrice: "13900",
+    description: "Perfect for small businesses and freelancers getting started",
+    features: [
+      "Invoice management for up to 100 clients",
+      "Basic expense tracking and categorization",
+      "Monthly financial reports and insights",
+      "Email support with 24hr response",
+      "Mobile app with offline access",
+      "Professional invoice templates",
+      "Basic payment gateway integration",
+      "Export data to CSV/PDF formats",
+    ],
+  },
+  {
+    name: "Professional",
+    price: "30900",
+    originalPrice: "40900",
+    description: "Advanced features for growing businesses with complex needs",
+    features: [
+      "Unlimited client and project management",
+      "Advanced expense tracking with AI categorization",
+      "Real-time financial analytics and forecasting",
+      "Priority support with phone and chat assistance",
+      "Multi-device sync with cloud backup",
+      "Custom branding and white-label templates",
+      "Automated recurring invoices and reminders",
+      "Tax preparation tools and compliance reports",
+      "Advanced reporting with 50+ templates",
+      "API access for third-party integrations",
+    ],
+    isPopular: true,
+  },
+  {
+    name: "Enterprise",
+    price: "50900",
+    originalPrice: "75900",
+    description: "Complete solution for large organizations and teams",
+    features: [
+      "Everything in Professional plan",
+      "Advanced team collaboration and role management",
+      "Custom integrations and full API access",
+      "Dedicated account manager and onboarding",
+      "Enterprise-grade security and compliance",
+      "White-label solutions with custom domains",
+      "Custom workflow automation and approvals",
+      "Priority feature requests and development",
+      "On-site training and implementation support",
+      "Advanced audit trails and user permissions",
+      "Multi-company and subsidiary management",
+      "Custom SLA with 99.9% uptime guarantee",
+    ],
+  },
+];
 
 // Categories
 const categories = [
@@ -360,13 +453,17 @@ async function main() {
       create: { name },
     });
   }
-  for (const name of currencies) {
-    await prisma.currency.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    });
-  }
+  console.log(`Seeded Categories.`);
+
+  // for (const { name, code } of currencies) {
+  //   await prisma.currency.upsert({
+  //     where: { name },
+  //     update: {},
+  //     create: { name, code },
+  //   });
+  // }
+  // console.log(`Seeded Currencies.`);
+
   for (const name of statuses) {
     await prisma.status.upsert({
       where: { name },
@@ -374,8 +471,24 @@ async function main() {
       create: { name },
     });
   }
+  console.log(`Seeded Statuses.`);
 
-  console.log(`Seeded categories, currencies, and statuses.`);
+  for (const plan of plans) {
+    await prisma.plan.upsert({
+      where: { name: plan.name }, // ✅ dynamically uses current plan's name
+      update: {}, // no changes on update, you can modify this if needed
+      create: {
+        name: plan.name,
+        description: plan.description,
+        price: plan.price,
+        originalPrice: plan.originalPrice,
+        features: plan.features,
+        isPopular: plan.isPopular || false,
+      },
+    });
+  }
+
+  console.log("Seeded Plans");
 }
 
 main()

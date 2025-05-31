@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   title: "Onboard to BillSane",
   description: "Simplify Your Billing",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon_logo.png",
   },
 };
 
@@ -30,7 +32,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Navbar />
+        <main className="pt-[70px]">{children}</main>
+        <Footer />
       </body>
     </html>
   );

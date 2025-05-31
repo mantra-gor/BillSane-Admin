@@ -53,19 +53,22 @@ CREATE TABLE "Business" (
     "no_of_staff" INTEGER NOT NULL,
     "countryId" INTEGER NOT NULL,
     "stateId" INTEGER NOT NULL,
-    "currencyId" INTEGER NOT NULL,
+    "currencyId" INTEGER,
 
     CONSTRAINT "Business_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "License" (
-    "key" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "keyEncrypted" TEXT NOT NULL,
+    "iv" TEXT NOT NULL,
     "businessId" INTEGER NOT NULL,
     "statusId" INTEGER NOT NULL,
+    "staffLimit" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "License_pkey" PRIMARY KEY ("key")
+    CONSTRAINT "License_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -78,6 +81,41 @@ CREATE TABLE "User" (
     "phone" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" SERIAL NOT NULL,
+    "razorpayOrderId" TEXT NOT NULL,
+    "razorpayPaymentId" TEXT,
+    "razorpaySignature" TEXT,
+    "amount" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
+    "status" TEXT NOT NULL DEFAULT 'CREATED',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "paidAt" TIMESTAMP(3),
+    "licenseId" INTEGER,
+    "userId" INTEGER NOT NULL,
+    "businessId" INTEGER NOT NULL,
+    "planId" INTEGER,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Plan" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "features" TEXT[],
+    "price" TEXT NOT NULL,
+    "originalPrice" TEXT NOT NULL,
+    "isPopular" BOOLEAN NOT NULL DEFAULT false,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Plan_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -95,6 +133,12 @@ CREATE UNIQUE INDEX "Country_code_key" ON "Country"("code");
 -- CreateIndex
 CREATE UNIQUE INDEX "Country_name_key" ON "Country"("name");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_razorpayOrderId_key" ON "Payment"("razorpayOrderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Plan_name_key" ON "Plan"("name");
+
 -- AddForeignKey
 ALTER TABLE "State" ADD CONSTRAINT "State_countryId_fkey" FOREIGN KEY ("countryId") REFERENCES "Country"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -108,7 +152,7 @@ ALTER TABLE "Business" ADD CONSTRAINT "Business_countryId_fkey" FOREIGN KEY ("co
 ALTER TABLE "Business" ADD CONSTRAINT "Business_stateId_fkey" FOREIGN KEY ("stateId") REFERENCES "State"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Business" ADD CONSTRAINT "Business_currencyId_fkey" FOREIGN KEY ("currencyId") REFERENCES "Currency"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Business" ADD CONSTRAINT "Business_currencyId_fkey" FOREIGN KEY ("currencyId") REFERENCES "Currency"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "License" ADD CONSTRAINT "License_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -118,3 +162,15 @@ ALTER TABLE "License" ADD CONSTRAINT "License_statusId_fkey" FOREIGN KEY ("statu
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "License"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_planId_fkey" FOREIGN KEY ("planId") REFERENCES "Plan"("id") ON DELETE SET NULL ON UPDATE CASCADE;
