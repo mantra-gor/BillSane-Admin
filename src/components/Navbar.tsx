@@ -28,6 +28,12 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isPastHero, setIsPastHero] = useState(false);
 
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setIsMenuOpen(false);
+  }
+
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
     onScroll();
@@ -39,21 +45,14 @@ export default function Navbar() {
   useEffect(() => {
     const hero =
       document.querySelector("[data-hero]") ?? document.querySelector("main")?.firstElementChild;
-    if (!hero) {
-      setIsPastHero(false);
-      return;
-    }
+    if (!hero) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => setIsPastHero(!entry.isIntersecting && entry.boundingClientRect.top < 64),
       { rootMargin: "-64px 0px 0px 0px" }
     );
     observer.observe(hero);
     return () => observer.disconnect();
-  }, [pathname]);
-
-  // Close the menu whenever the route changes.
-  useEffect(() => {
-    setIsMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -77,6 +76,7 @@ export default function Navbar() {
   }, [isMenuOpen]);
 
   const isActive = (path: string) => pathname.startsWith(path);
+  const closeMenu = () => setIsMenuOpen(false);
   const isPill = isPastHero || isMenuOpen;
   // Hover needs a fill that shows on whichever surface sits behind the links.
   const hoverFill = isPill ? "hover:bg-surface-muted" : "hover:bg-surface";
@@ -86,7 +86,7 @@ export default function Navbar() {
       {/* Scrim behind the open menu; tapping it closes the menu. */}
       <div
         aria-hidden="true"
-        onClick={() => setIsMenuOpen(false)}
+        onClick={closeMenu}
         className={cn(
           "fixed inset-0 -z-10 bg-ink/20 transition-opacity duration-200 ease-snap motion-reduce:transition-none md:hidden",
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
@@ -117,6 +117,7 @@ export default function Navbar() {
           <div className="grid h-12 grid-cols-[1fr_auto] items-center pl-4 pr-1 md:grid-cols-[1fr_auto_1fr] lg:pl-5">
             <Link
               href="/"
+              onClick={closeMenu}
               aria-label="BillSane home"
               className="shrink-0 justify-self-start rounded-md"
             >
@@ -154,6 +155,7 @@ export default function Navbar() {
             <div className="flex items-center justify-self-end">
               <ButtonLink
                 href="/pricing"
+                onClick={closeMenu}
                 variant="primary"
                 size="md"
                 className="px-4 sm:px-[18px]"
@@ -196,6 +198,7 @@ export default function Navbar() {
                     <li key={item.path}>
                       <Link
                         href={item.path}
+                        onClick={closeMenu}
                         aria-current={isActive(item.path) ? "page" : undefined}
                         className={cn(
                           "flex h-12 items-center justify-between rounded-2xl px-4 text-base font-medium transition-colors duration-150 ease-snap",
