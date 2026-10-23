@@ -97,3 +97,17 @@ export const generateLicenseKey = () => {
   }
   return segments.join("-");
 };
+
+// Plans have no currency column yet, so prices are shown in rupees as entered
+// in the plan data. Keep every price on screen going through this one function.
+export function formatPrice(value: string | number) {
+  return `₹${Number(value).toLocaleString("en-IN")}`;
+}
+
+/** Whole-number saving of `price` against `originalPrice`, or null when there is none. */
+export function savingPercent(price: string | number, originalPrice: string | number) {
+  const now = Number(price);
+  const was = Number(originalPrice);
+  if (!Number.isFinite(now) || !Number.isFinite(was) || was <= now || was <= 0) return null;
+  return Math.round((1 - now / was) * 100);
+}

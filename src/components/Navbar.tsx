@@ -1,340 +1,224 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { usePathname } from "next/navigation";
+import { ArrowRight, ChevronRight, Menu, X } from "lucide-react";
+import { ButtonLink } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Section";
+import { cn } from "@/lib/utils";
 
-// Navigation items
 const navItems = [
-  { path: "/", label: "Home" },
   { path: "/features", label: "Features" },
   { path: "/pricing", label: "Pricing" },
   { path: "/support", label: "Support" },
-  { path: "/about", label: "About Us" },
 ];
 
-export default function NewNavbar() {
+/**
+ * Over the hero the header sits flat on the canvas. Once the hero has scrolled
+ * under it, the links gather into one white, ring-edged pill that floats over
+ * the page. Pages mark their hero with `data-hero`. On phones the same pill
+ * opens downward to hold the links, with the perforation rule as the tear line.
+ */
+export default function Navbar() {
   const pathname = usePathname();
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // Refs for animations
-  const navbarRef = useRef(null);
-  const logoRef = useRef(null);
-  const desktopLinksRef = useRef<HTMLDivElement>(null);
-  const ctaButtonRef = useRef(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const menuBackdropRef = useRef(null);
+  const [isPastHero, setIsPastHero] = useState(false);
 
   useEffect(() => {
-    // Register GSAP plugins
-    if (typeof window !== "undefined") {
-      gsap.registerPlugin(ScrollTrigger);
-    }
-
-    // Initial animations for navbar elements
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-    tl.fromTo(
-      logoRef.current,
-      { y: -30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, delay: 0.5 }
-    );
-
-    if (desktopLinksRef.current && desktopLinksRef.current.children) {
-      tl.fromTo(
-        Array.from(desktopLinksRef.current.children),
-        { y: -20, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          stagger: 0.1,
-          duration: 0.4,
-        },
-        "-=0.3"
-      );
-    }
-
-    tl.fromTo(
-      ctaButtonRef.current,
-      { y: -20, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.5 },
-      "-=0.2"
-    );
-
-    // Scroll trigger for navbar background
-    ScrollTrigger.create({
-      start: "top -=50",
-      end: "bottom top",
-      onEnter: () => setIsScrolled(true),
-      onLeaveBack: () => setIsScrolled(false),
-    });
-
-    // Cleanup function
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Handle scroll state for navbar styling
+  // Watch the page's hero; the pill takes over once its bottom passes the header.
   useEffect(() => {
-    if (!navbarRef.current) return;
-
-    if (isScrolled) {
-      gsap.to(navbarRef.current, {
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-        height: "70px",
-        backdropFilter: "blur(12px)",
-        duration: 0.3,
-        ease: "power2.out",
-        display: "flex",
-      });
-    } else {
-      gsap.to(navbarRef.current, {
-        backgroundColor: "rgba(255, 255, 255, 0.8)",
-        boxShadow: "none",
-        height: "80px",
-        backdropFilter: "blur(8px)",
-        duration: 0.3,
-        ease: "power2.out",
-        display: "flex",
-      });
+    const hero =
+      document.querySelector("[data-hero]") ?? document.querySelector("main")?.firstElementChild;
+    if (!hero) {
+      setIsPastHero(false);
+      return;
     }
-  }, [isScrolled]);
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsPastHero(!entry.isIntersecting && entry.boundingClientRect.top < 64),
+      { rootMargin: "-64px 0px 0px 0px" }
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [pathname]);
 
-  // Mobile menu animations
+  // Close the menu whenever the route changes.
   useEffect(() => {
-    if (!mobileMenuRef.current) return;
+    setIsMenuOpen(false);
+  }, [pathname]);
 
-    const menuItems = mobileMenuRef.current.querySelectorAll("a");
-
-    if (isMenuOpen) {
-      // Mobile menu open animation
-      gsap.set(mobileMenuRef.current, { display: "flex" });
-      gsap.to(menuBackdropRef.current, {
-        opacity: 1,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-      gsap.fromTo(
-        mobileMenuRef.current,
-        { x: "100%" },
-        { x: "0%", duration: 0.4, ease: "power3.out" }
-      );
-      gsap.fromTo(
-        menuItems,
-        { x: 30, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          stagger: 0.08,
-          delay: 0.2,
-          duration: 0.4,
-          ease: "power2.out",
-        }
-      );
-
-      // Prevent body scroll
-      document.body.style.overflow = "hidden";
-    } else {
-      // Mobile menu close animation
-      gsap.to(menuItems, {
-        x: 30,
-        opacity: 0,
-        stagger: 0.05,
-        duration: 0.25,
-        ease: "power2.in",
-      });
-      gsap.to(menuBackdropRef.current, {
-        opacity: 0,
-        duration: 0.3,
-        ease: "power2.in",
-      });
-      gsap.to(mobileMenuRef.current, {
-        x: "100%",
-        duration: 0.35,
-        ease: "power3.in",
-        onComplete: () => {
-          gsap.set(mobileMenuRef.current, { display: "none" });
-        },
-      });
-
-      // Restore body scroll
-      document.body.style.overflow = "auto";
-    }
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setIsMenuOpen(false);
+      toggleRef.current?.focus();
+    };
+    // The menu is phone-only, so growing past md must not leave the page locked.
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onResize = (e: MediaQueryListEvent) => e.matches && setIsMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    desktop.addEventListener("change", onResize);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      desktop.removeEventListener("change", onResize);
+      document.body.style.overflow = "";
+    };
   }, [isMenuOpen]);
 
-  // Close menu when clicking outside or on backdrop
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-
-  // Check if current path matches nav item
-  const isActivePath = (itemPath: string) => {
-    if (itemPath === "/") {
-      return pathname === "/";
-    }
-    return pathname.startsWith(itemPath);
-  };
+  const isActive = (path: string) => pathname.startsWith(path);
+  const isPill = isPastHero || isMenuOpen;
+  // Hover needs a fill that shows on whichever surface sits behind the links.
+  const hoverFill = isPill ? "hover:bg-surface-muted" : "hover:bg-surface";
 
   return (
-    <>
-      <header
-        ref={navbarRef}
-        className="fixed top-0 left-0 right-0 z-40 transition-all"
-        style={{
-          height: "80px",
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          backdropFilter: "blur(8px)",
-          display: "none",
-        }}
-      >
-        <div className="container mx-auto h-full px-4 lg:px-6">
-          <div className="flex items-center justify-between h-full">
-            {/* Logo */}
-            <div ref={logoRef} className="relative z-10">
-              <Link href="/" className="flex items-center">
-                <Image
-                  src="/logo-no-background.png"
-                  alt="BillSane Logo"
-                  width={160}
-                  height={42}
-                  className="object-contain transition-all duration-300 hover:scale-105"
-                  priority
-                />
-              </Link>
-            </div>
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 h-16">
+      {/* Scrim behind the open menu; tapping it closes the menu. */}
+      <div
+        aria-hidden="true"
+        onClick={() => setIsMenuOpen(false)}
+        className={cn(
+          "fixed inset-0 -z-10 bg-ink/20 transition-opacity duration-200 ease-snap motion-reduce:transition-none md:hidden",
+          isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        )}
+      />
 
-            {/* Desktop Navigation */}
-            <nav
-              ref={desktopLinksRef}
-              className="hidden md:flex items-center space-x-2 lg:space-x-4"
+      {/* The flat bar over the hero: canvas, so hero content scrolls out of sight beneath it. */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-0 bg-canvas transition-[opacity,box-shadow] duration-200 ease-snap motion-reduce:transition-none",
+          isPill ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100",
+          isScrolled && "shadow-[0_1px_0_0_var(--color-line)]"
+        )}
+      />
+
+      <Container className="relative h-full pt-2">
+        <div
+          className={cn(
+            "pointer-events-auto -mx-2 rounded-3xl transition-[background-color,box-shadow] duration-200 ease-snap motion-reduce:transition-none sm:-mx-3 lg:-mx-5",
+            isMenuOpen
+              ? "bg-surface shadow-pop"
+              : isPastHero
+                ? "bg-surface shadow-raised"
+                : "bg-transparent shadow-none"
+          )}
+        >
+          <div className="grid h-12 grid-cols-[1fr_auto] items-center pl-4 pr-1 md:grid-cols-[1fr_auto_1fr] lg:pl-5">
+            <Link
+              href="/"
+              aria-label="BillSane home"
+              className="shrink-0 justify-self-start rounded-md"
             >
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`relative group font-medium text-base py-3 px-4 transition-all duration-300 ${
-                    isActivePath(item.path)
-                      ? "text-primary-900 tracking-wide"
-                      : "text-primary-300"
-                  }`}
-                >
-                  {item.label}
-                  <span
-                    className={`block h-[2px] transition-all duration-300 ease-out mt-2 group-hover:w-full ${
-                      isActivePath(item.path)
-                        ? "w-full bg-munsell_blue"
-                        : "w-0 group-hover:w-full bg-munsell_blue"
-                    }`}
-                  ></span>
-                </Link>
-              ))}
+              <Image
+                src="/logo-no-background.png"
+                alt="BillSane"
+                width={1500}
+                height={433}
+                priority
+                className="h-[28px] w-auto"
+              />
+            </Link>
+
+            <nav aria-label="Main" className="hidden md:block">
+              <ul className="flex items-center gap-1">
+                {navItems.map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      href={item.path}
+                      aria-current={isActive(item.path) ? "page" : undefined}
+                      className={cn(
+                        "inline-flex h-8 items-center rounded-full px-3.5 text-sm font-medium transition-[background-color,color] duration-150 ease-snap",
+                        isActive(item.path)
+                          ? "bg-munsell_blue-5 text-munsell_blue-700"
+                          : cn("text-ink-soft hover:text-ink", hoverFill)
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </nav>
 
-            {/* CTA Button */}
-            <div ref={ctaButtonRef} className="hidden md:block">
-              <Link
+            <div className="flex items-center justify-self-end">
+              <ButtonLink
                 href="/pricing"
-                className="inline-flex font-semibold items-center justify-center bg-gradient-to-l from-munsell_blue to-munsell_blue-600 text-white text-sm px-6 py-2.5 rounded-md shadow-sm hover:shadow-md hover:translate-y-[-1px] transition-all duration-300"
+                variant="primary"
+                size="md"
+                className="px-4 sm:px-[18px]"
+                trailing={<ArrowRight size={14} aria-hidden="true" className="hidden sm:block" />}
               >
-                Get Started
-              </Link>
-            </div>
+                Get started
+              </ButtonLink>
 
-            {/* Mobile Menu Button */}
-            <button
-              type="button"
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100/80 text-gray-700 hover:bg-gray-200/80 transition-all duration-200 hover:scale-105 active:scale-95"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-              aria-expanded={isMenuOpen}
-            >
-              <div className="relative w-5 h-5">
-                <Menu
-                  size={20}
-                  className={`absolute inset-0 transition-all duration-300 ${
-                    isMenuOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
-                  }`}
-                />
-                <X
-                  size={20}
-                  className={`absolute inset-0 transition-all duration-300 ${
-                    isMenuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
-                  }`}
-                />
-              </div>
-            </button>
+              <button
+                ref={toggleRef}
+                type="button"
+                className={cn(
+                  "ml-1 inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors duration-150 ease-snap md:hidden",
+                  hoverFill
+                )}
+                onClick={() => setIsMenuOpen((open) => !open)}
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+              >
+                {isMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Phone menu: the same plane, opened downward. */}
+          <div
+            id="mobile-menu"
+            inert={!isMenuOpen}
+            className={cn(
+              "grid transition-[grid-template-rows] duration-200 ease-snap motion-reduce:transition-none md:hidden",
+              isMenuOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            )}
+          >
+            <div className="overflow-hidden">
+              <div role="presentation" className="rule-perforated mx-4 text-ink" />
+              <nav aria-label="Main" className="p-2">
+                <ul>
+                  {navItems.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        href={item.path}
+                        aria-current={isActive(item.path) ? "page" : undefined}
+                        className={cn(
+                          "flex h-12 items-center justify-between rounded-2xl px-4 text-base font-medium transition-colors duration-150 ease-snap",
+                          isActive(item.path)
+                            ? "bg-munsell_blue-5 text-munsell_blue-700"
+                            : "text-ink-soft hover:bg-surface-muted hover:text-ink"
+                        )}
+                      >
+                        {item.label}
+                        <ChevronRight
+                          size={16}
+                          aria-hidden="true"
+                          className={isActive(item.path) ? "text-munsell_blue-700" : "text-ink-faint"}
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
-      </header>
-
-      {/* Mobile Menu Backdrop */}
-      <div
-        ref={menuBackdropRef}
-        className={`fixed inset-0 bg-black/40 z-40 md:hidden ${
-          isMenuOpen ? "block" : "hidden"
-        }`}
-        style={{ opacity: 0 }}
-        onClick={closeMenu}
-      ></div>
-
-      {/* Mobile Menu Panel */}
-      <div
-        ref={mobileMenuRef}
-        className="fixed top-0 right-0 bottom-0 z-50 w-4/5 max-w-sm bg-white shadow-2xl md:hidden border-l border-gray-200"
-        style={{ display: "none", transform: "translateX(100%)" }}
-      >
-        <div className="flex flex-col h-full w-full">
-          {/* Menu Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <div className="text-lg font-semibold text-gray-900">Menu</div>
-            <button
-              onClick={closeMenu}
-              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200"
-              aria-label="Close menu"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="flex-1 px-6 py-4">
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`block py-3 px-4 text-base rounded-lg transition-all duration-200 ${
-                    isActivePath(item.path)
-                      ? "text-munsell_blue-700 bg-blue-50 font-medium border-l-4 border-munsell_blue-500"
-                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                  onClick={closeMenu}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
-
-          {/* CTA Button */}
-          <div className="p-6 border-t border-gray-100">
-            <Link
-              href="/pricing"
-              className="inline-flex font-semibold items-center justify-center bg-gradient-to-l from-munsell_blue to-munsell_blue-600 text-white text-sm px-6 py-2.5 rounded-md shadow-sm hover:shadow-md hover:translate-y-[-1px] transition-all duration-300"
-              onClick={closeMenu}
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </div>
-    </>
+      </Container>
+    </header>
   );
 }

@@ -1,0 +1,851 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T17:59:20.791162+00:00",
+  "title": "Design System: BillSane",
+  "extensions": {
+    "colorMeta": {
+      "prussian-navy": {
+        "role": "primary",
+        "displayName": "Prussian Navy",
+        "canonical": "#053247",
+        "tonalRamp": [
+          "#010D13",
+          "#03283A",
+          "#054261",
+          "#075D88",
+          "#0977AE",
+          "#0B92D5",
+          "#64C6F7",
+          "#ECF8FE"
+        ]
+      },
+      "prussian-navy-deep": {
+        "role": "primary",
+        "displayName": "Prussian Navy Deep",
+        "canonical": "#054261",
+        "tonalRamp": [
+          "#03283A",
+          "#06496B",
+          "#086DA0",
+          "#0B94DA",
+          "#34B3F4",
+          "#77CDF8",
+          "#BBE6FB",
+          "#E7F6FE"
+        ]
+      },
+      "prussian-navy-wash": {
+        "role": "primary",
+        "displayName": "Prussian Wash",
+        "canonical": "#ECF8FE",
+        "tonalRamp": [
+          "#03283A",
+          "#06496B",
+          "#086DA0",
+          "#0B95DA",
+          "#34B4F4",
+          "#77CDF8",
+          "#BBE6FB",
+          "#E7F6FE"
+        ]
+      },
+      "counter-teal": {
+        "role": "secondary",
+        "displayName": "Counter Teal",
+        "canonical": "#298E9E",
+        "tonalRamp": [
+          "#040F10",
+          "#0C2E31",
+          "#144D52",
+          "#1C6C73",
+          "#248A94",
+          "#2CA9B5",
+          "#5BCDD7",
+          "#DEF5F7"
+        ]
+      },
+      "counter-teal-deep": {
+        "role": "secondary",
+        "displayName": "Teal Deep",
+        "canonical": "#248A94",
+        "tonalRamp": [
+          "#0C2E31",
+          "#16545A",
+          "#217E87",
+          "#2DACB9",
+          "#53C9D5",
+          "#8CDBE3",
+          "#C6EDF1",
+          "#EAF9FA"
+        ]
+      },
+      "counter-teal-bright": {
+        "role": "secondary",
+        "displayName": "Teal Bright",
+        "canonical": "#3AC3CF",
+        "tonalRamp": [
+          "#0C2E31",
+          "#16555A",
+          "#217F87",
+          "#2DADB9",
+          "#53CBD5",
+          "#8CDCE3",
+          "#C6EEF1",
+          "#EAF9FA"
+        ]
+      },
+      "counter-teal-wash": {
+        "role": "secondary",
+        "displayName": "Teal Wash",
+        "canonical": "#DEF5F7",
+        "tonalRamp": [
+          "#0C2E31",
+          "#16555A",
+          "#217F87",
+          "#2DAEB9",
+          "#53CBD5",
+          "#8CDCE3",
+          "#C6EEF1",
+          "#EAF9FA"
+        ]
+      },
+      "palette-grey": {
+        "role": "neutral",
+        "displayName": "Palette Grey",
+        "canonical": "#F7F7F7",
+        "tonalRamp": [
+          "#141414",
+          "#333333",
+          "#5C5C5C",
+          "#858585",
+          "#ADADAD",
+          "#D6D6D6",
+          "#EBEBEB",
+          "#F7F7F7"
+        ]
+      },
+      "shell-night": {
+        "role": "neutral",
+        "displayName": "Shell Night",
+        "canonical": "#062639",
+        "tonalRamp": [
+          "#062537",
+          "#0B4466",
+          "#106698",
+          "#168AD0",
+          "#3DAAEB",
+          "#7EC6F1",
+          "#BEE3F8",
+          "#E8F5FD"
+        ]
+      },
+      "shell-raised": {
+        "role": "neutral",
+        "displayName": "Shell Raised",
+        "canonical": "#0B3A54",
+        "tonalRamp": [
+          "#072536",
+          "#0D4563",
+          "#136795",
+          "#1B8CCB",
+          "#42ACE6",
+          "#81C7EE",
+          "#C0E3F7",
+          "#E8F5FC"
+        ]
+      },
+      "shell-hover": {
+        "role": "neutral",
+        "displayName": "Shell Hover",
+        "canonical": "#0E4763",
+        "tonalRamp": [
+          "#082636",
+          "#0E4662",
+          "#156A93",
+          "#1C90C9",
+          "#43AFE4",
+          "#82CAED",
+          "#C0E4F6",
+          "#E9F6FC"
+        ]
+      },
+      "shell-border": {
+        "role": "neutral",
+        "displayName": "Shell Border",
+        "canonical": "#14536F",
+        "tonalRamp": [
+          "#092734",
+          "#11475F",
+          "#1A6B8F",
+          "#2391C2",
+          "#4AB1DE",
+          "#86CBE9",
+          "#C3E5F4",
+          "#E9F6FB"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#F1F5F9",
+        "tonalRamp": [
+          "#121F2B",
+          "#22384F",
+          "#325476",
+          "#4573A1",
+          "#6994BF",
+          "#9BB8D4",
+          "#CDDBEA",
+          "#EDF2F7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#1F1F1F",
+          "#383838",
+          "#545454",
+          "#737373",
+          "#949494",
+          "#B8B8B8",
+          "#DBDBDB",
+          "#F2F2F2"
+        ]
+      },
+      "surface-subtle": {
+        "role": "neutral",
+        "displayName": "Surface Subtle",
+        "canonical": "#F8FAFC",
+        "tonalRamp": [
+          "#121F2B",
+          "#22384F",
+          "#325476",
+          "#4573A1",
+          "#6994BF",
+          "#9BB8D4",
+          "#CDDBEA",
+          "#EDF2F7"
+        ]
+      },
+      "surface-muted": {
+        "role": "neutral",
+        "displayName": "Surface Muted",
+        "canonical": "#F1F5F9",
+        "tonalRamp": [
+          "#121F2B",
+          "#22384F",
+          "#325476",
+          "#4573A1",
+          "#6994BF",
+          "#9BB8D4",
+          "#CDDBEA",
+          "#EDF2F7"
+        ]
+      },
+      "surface-sunken": {
+        "role": "neutral",
+        "displayName": "Surface Sunken",
+        "canonical": "#E9EFF5",
+        "tonalRamp": [
+          "#131F2A",
+          "#23384D",
+          "#355474",
+          "#48739E",
+          "#6C94BC",
+          "#9DB8D2",
+          "#CEDBE9",
+          "#EDF2F7"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#E3EAF1",
+        "tonalRamp": [
+          "#141F29",
+          "#25384B",
+          "#385470",
+          "#4D7399",
+          "#7094B8",
+          "#A0B8CF",
+          "#CFDBE7",
+          "#EEF2F6"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Line Strong",
+        "canonical": "#CBD8E3",
+        "tonalRamp": [
+          "#151F28",
+          "#273A49",
+          "#3B566D",
+          "#507695",
+          "#7497B4",
+          "#A2B9CD",
+          "#D1DCE6",
+          "#EEF3F6"
+        ]
+      },
+      "line-faint": {
+        "role": "neutral",
+        "displayName": "Line Faint",
+        "canonical": "#EEF3F8",
+        "tonalRamp": [
+          "#121F2B",
+          "#21384F",
+          "#315477",
+          "#4373A3",
+          "#6794C1",
+          "#9AB8D5",
+          "#CCDBEA",
+          "#EDF2F8"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#0C2231",
+        "tonalRamp": [
+          "#0C2231",
+          "#163F5A",
+          "#215E87",
+          "#2D80B8",
+          "#53A0D5",
+          "#8CC0E3",
+          "#C6DFF1",
+          "#EBF4FA"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "#3F5769",
+        "tonalRamp": [
+          "#172026",
+          "#2A3A46",
+          "#3F5769",
+          "#56778F",
+          "#7998AF",
+          "#A6BAC9",
+          "#D2DDE4",
+          "#EFF3F5"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#64798B",
+        "tonalRamp": [
+          "#1A1F24",
+          "#2F3941",
+          "#465562",
+          "#607485",
+          "#8295A5",
+          "#ACB8C3",
+          "#D5DCE1",
+          "#F0F2F4"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Ink Faint",
+        "canonical": "#93A5B4",
+        "tonalRamp": [
+          "#191F24",
+          "#2E3942",
+          "#455663",
+          "#5E7587",
+          "#8196A7",
+          "#ABB9C4",
+          "#D5DCE2",
+          "#F0F2F5"
+        ]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Success",
+        "canonical": "#0E9F6E",
+        "tonalRamp": [
+          "#053827",
+          "#096747",
+          "#0E9B6B",
+          "#13D392",
+          "#3AEEB1",
+          "#7CF3CB",
+          "#BDF9E5",
+          "#E8FDF6"
+        ]
+      },
+      "success-soft": {
+        "role": "status",
+        "displayName": "Success Soft",
+        "canonical": "#E6F6F0",
+        "tonalRamp": [
+          "#102D22",
+          "#1E533F",
+          "#2D7C5E",
+          "#3DA980",
+          "#61C6A0",
+          "#96D9C0",
+          "#CAECE0",
+          "#ECF8F4"
+        ]
+      },
+      "success-ink": {
+        "role": "status",
+        "displayName": "Success Ink",
+        "canonical": "#07603F",
+        "tonalRamp": [
+          "#043925",
+          "#086945",
+          "#0B9D67",
+          "#10D68C",
+          "#37F0AC",
+          "#7AF5C8",
+          "#BCFAE3",
+          "#E7FDF5"
+        ]
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Warning",
+        "canonical": "#C77700",
+        "tonalRamp": [
+          "#3A2403",
+          "#6B4206",
+          "#A06308",
+          "#DA870B",
+          "#F4A734",
+          "#F8C477",
+          "#FBE2BB",
+          "#FEF4E7"
+        ]
+      },
+      "warning-soft": {
+        "role": "status",
+        "displayName": "Warning Soft",
+        "canonical": "#FDF4E3",
+        "tonalRamp": [
+          "#392704",
+          "#694707",
+          "#9D6B0B",
+          "#D6910F",
+          "#F1B037",
+          "#F5CB7A",
+          "#FAE5BC",
+          "#FDF6E7"
+        ]
+      },
+      "warning-ink": {
+        "role": "status",
+        "displayName": "Warning Ink",
+        "canonical": "#7A4A00",
+        "tonalRamp": [
+          "#3A2403",
+          "#6B4306",
+          "#A06408",
+          "#DA890B",
+          "#F4A834",
+          "#F8C577",
+          "#FBE2BB",
+          "#FEF5E7"
+        ]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Danger",
+        "canonical": "#DC2B2B",
+        "tonalRamp": [
+          "#350909",
+          "#601010",
+          "#901818",
+          "#C52121",
+          "#E14747",
+          "#EB8484",
+          "#F5C2C2",
+          "#FBE9E9"
+        ]
+      },
+      "danger-soft": {
+        "role": "status",
+        "displayName": "Danger Soft",
+        "canonical": "#FDECEC",
+        "tonalRamp": [
+          "#370606",
+          "#660B0B",
+          "#981010",
+          "#D01616",
+          "#EB3D3D",
+          "#F17E7E",
+          "#F8BEBE",
+          "#FDE8E8"
+        ]
+      },
+      "danger-border": {
+        "role": "status",
+        "displayName": "Danger Border",
+        "canonical": "#F5B9B9",
+        "tonalRamp": [
+          "#360808",
+          "#620E0E",
+          "#931515",
+          "#C91D1D",
+          "#E44444",
+          "#ED8282",
+          "#F6C1C1",
+          "#FCE9E9"
+        ]
+      },
+      "danger-ink": {
+        "role": "status",
+        "displayName": "Danger Ink",
+        "canonical": "#8E1616",
+        "tonalRamp": [
+          "#350808",
+          "#610F0F",
+          "#921717",
+          "#C71F1F",
+          "#E24646",
+          "#EC8383",
+          "#F5C1C1",
+          "#FCE9E9"
+        ]
+      },
+      "info": {
+        "role": "status",
+        "displayName": "Info",
+        "canonical": "#2A78D6",
+        "tonalRamp": [
+          "#0A1D33",
+          "#12355E",
+          "#1B4F8D",
+          "#256CC0",
+          "#4B8DDC",
+          "#87B3E8",
+          "#C3D9F3",
+          "#EAF1FB"
+        ]
+      },
+      "info-soft": {
+        "role": "status",
+        "displayName": "Info Soft",
+        "canonical": "#EAF2FD",
+        "tonalRamp": [
+          "#051B38",
+          "#0A3166",
+          "#0F499A",
+          "#1464D2",
+          "#3B86EC",
+          "#7DAEF3",
+          "#BED7F9",
+          "#E8F1FD"
+        ]
+      },
+      "info-ink": {
+        "role": "status",
+        "displayName": "Info Ink",
+        "canonical": "#17457F",
+        "tonalRamp": [
+          "#091C34",
+          "#11345F",
+          "#1A4D8E",
+          "#236AC2",
+          "#4A8BDE",
+          "#86B2E9",
+          "#C3D8F4",
+          "#E9F1FB"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Brand-panel statements and the website hero."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, button labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, table cells, form text; 16px for website reading copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form field labels in ink-soft."
+      },
+      "overline": {
+        "displayName": "Overline",
+        "purpose": "Uppercase stat labels and nav group headings."
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "KPI values and totals; tabular figures."
+      },
+      "kbd": {
+        "displayName": "Keyboard",
+        "purpose": "Shortcut chips only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "xs",
+        "value": "0 1px 2px 0 rgba(12,34,49,0.05)",
+        "purpose": "Inputs, secondary buttons, keyboard chips."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 2px 0 rgba(12,34,49,0.04), 0 1px 3px 0 rgba(12,34,49,0.06)",
+        "purpose": "Every card at rest."
+      },
+      {
+        "name": "raised",
+        "value": "0 2px 4px -1px rgba(12,34,49,0.06), 0 8px 16px -4px rgba(12,34,49,0.08)",
+        "purpose": "Interactive card on hover."
+      },
+      {
+        "name": "pop",
+        "value": "0 8px 12px -4px rgba(12,34,49,0.08), 0 20px 32px -8px rgba(12,34,49,0.14)",
+        "purpose": "Menus and popovers."
+      },
+      {
+        "name": "overlay",
+        "value": "0 16px 24px -8px rgba(12,34,49,0.12), 0 32px 64px -16px rgba(12,34,49,0.24)",
+        "purpose": "Modals and the command palette."
+      },
+      {
+        "name": "inset",
+        "value": "inset 0 1px 2px 0 rgba(12,34,49,0.06)",
+        "purpose": "Recessed wells."
+      },
+      {
+        "name": "brand",
+        "value": "0 4px 12px -2px rgba(5,50,71,0.28)",
+        "purpose": "Primary buttons."
+      },
+      {
+        "name": "accent",
+        "value": "0 4px 12px -2px rgba(41,142,158,0.32)",
+        "purpose": "Accent buttons."
+      },
+      {
+        "name": "input-focus",
+        "value": "0 0 0 3px rgba(41,142,158,0.16)",
+        "purpose": "Teal halo on focused inputs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-snap",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "The single easing curve for every transition."
+      },
+      {
+        "name": "fade-in",
+        "value": "fade-in 160ms ease-out both",
+        "purpose": "Page and panel appearance."
+      },
+      {
+        "name": "fade-in-up",
+        "value": "fade-in-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "purpose": "Content entering, translateY(8px) to 0."
+      },
+      {
+        "name": "scale-in",
+        "value": "scale-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "purpose": "Popovers and modals, scale 0.96 to 1."
+      },
+      {
+        "name": "slide-in-right",
+        "value": "slide-in-right 220ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "purpose": "Drawers and toasts, translateX(16px) to 0."
+      },
+      {
+        "name": "control-transition",
+        "value": "all 150ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Buttons and inputs state changes."
+      },
+      {
+        "name": "shimmer",
+        "value": "shimmer 1.6s linear infinite",
+        "purpose": "Skeleton loading only."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one brand action per view; navy fill with the brand shadow.",
+      "html": "<button class=\"ds-btn-primary\">New invoice</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:14px;font-weight:600;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);background:#053247;color:#fff;box-shadow:0 4px 12px -2px rgba(5,50,71,0.28);}.ds-btn-primary:hover{background:#054261;}.ds-btn-primary:active{background:#03283A;}.ds-btn-primary:focus-visible{outline:2px solid #298E9E;outline-offset:2px;}"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Website conversion action (Get Started, Buy, Download); counter teal with accent shadow.",
+      "html": "<button class=\"ds-btn-accent\">Get started</button>",
+      "css": ".ds-btn-accent{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:14px;font-weight:600;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);background:#298E9E;color:#fff;box-shadow:0 4px 12px -2px rgba(41,142,158,0.32);}.ds-btn-accent:hover{background:#248A94;}.ds-btn-accent:active{background:#1C6C73;}.ds-btn-accent:focus-visible{outline:2px solid #298E9E;outline-offset:2px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Neutral action beside a primary; white surface, hairline, xs shadow.",
+      "html": "<button class=\"ds-btn-secondary\">Export</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:14px;font-weight:600;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);background:#fff;color:#0C2231;border-color:#E3EAF1;box-shadow:0 1px 2px 0 rgba(12,34,49,0.05);}.ds-btn-secondary:hover{background:#F8FAFC;border-color:#CBD8E3;}.ds-btn-secondary:active{background:#F1F5F9;}.ds-btn-secondary:focus-visible{outline:2px solid #298E9E;outline-offset:2px;}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis action; transparent, ink-soft.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:14px;font-weight:600;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);background:transparent;color:#3F5769;}.ds-btn-ghost:hover{background:#F1F5F9;}.ds-btn-ghost:active{background:#E9EFF5;}.ds-btn-ghost:focus-visible{outline:2px solid #298E9E;outline-offset:2px;}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Label, control and hint frame shared by every form.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">GST number</span><input class=\"ds-input\" placeholder=\"22AAAAA0000A1Z5\"><span class=\"ds-field-hint\">Optional. You can add it later.</span></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;max-width:320px;}.ds-field-label{font-size:13px;font-weight:600;color:#3F5769;}.ds-field-hint{font-size:12px;color:#64798B;}.ds-input{width:100%;padding:10px 12px;font:inherit;font-size:14px;color:#0C2231;background:#fff;border:1px solid #E3EAF1;border-radius:8px;box-shadow:0 1px 2px 0 rgba(12,34,49,0.05);transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);}.ds-input::placeholder{color:#93A5B4;}.ds-input:hover:not(:focus){border-color:#CBD8E3;}.ds-input:focus{outline:none;border-color:#298E9E;box-shadow:0 0 0 3px rgba(41,142,158,0.16);}"
+    },
+    {
+      "name": "Invalid Field",
+      "kind": "input",
+      "refersTo": "input-invalid",
+      "description": "Error state: danger wash, danger border, message replaces the hint.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email<span class=\"ds-req\">*</span></span><input class=\"ds-input ds-input-invalid\" value=\"owner@shop\" aria-invalid=\"true\"><span class=\"ds-field-error\">Enter a valid email address</span></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;max-width:320px;}.ds-field-label{font-size:13px;font-weight:600;color:#3F5769;}.ds-req{margin-left:4px;color:#DC2B2B;}.ds-input{width:100%;padding:10px 12px;font:inherit;font-size:14px;color:#0C2231;border-radius:8px;transition:all 150ms cubic-bezier(0.22, 1, 0.36, 1);}.ds-input-invalid{background:#FDECEC;border:1px solid #F5B9B9;}.ds-input-invalid:focus{outline:none;border-color:#DC2B2B;box-shadow:0 0 0 3px rgba(220,43,43,0.14);}.ds-field-error{font-size:12px;font-weight:500;color:#DC2B2B;}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Standard panel: hairline, card shadow, 16px corners; lifts on hover when interactive.",
+      "html": "<section class=\"ds-card\"><header><h3>Professional</h3><p>For growing shops</p></header><p class=\"ds-card-value\">₹1,09,900</p></section>",
+      "css": ".ds-card{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;width:260px;padding:20px;background:#fff;border:1px solid #E3EAF1;border-radius:16px;box-shadow:0 1px 2px 0 rgba(12,34,49,0.04),0 1px 3px 0 rgba(12,34,49,0.06);transition:all 200ms cubic-bezier(0.22, 1, 0.36, 1);}.ds-card:hover{transform:translateY(-2px);border-color:#CBD8E3;box-shadow:0 2px 4px -1px rgba(12,34,49,0.06),0 8px 16px -4px rgba(12,34,49,0.08);}.ds-card h3{margin:0;font-size:14px;font-weight:600;color:#0C2231;}.ds-card p{margin:2px 0 0;font-size:12px;color:#64798B;}.ds-card .ds-card-value{margin-top:16px;font-size:22px;font-weight:700;color:#0C2231;font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Pill badges with optional status dot; one tone per meaning.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge-success\"><i></i>Active</span><span class=\"ds-badge ds-badge-warning\"><i></i>Expiring</span><span class=\"ds-badge ds-badge-danger\"><i></i>Expired</span><span class=\"ds-badge ds-badge-accent\">Popular</span></div>",
+      "css": ".ds-badges{display:flex;gap:8px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;}.ds-badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;font-size:11px;font-weight:600;border-radius:9999px;border:1px solid;}.ds-badge i{width:6px;height:6px;border-radius:9999px;background:currentColor;}.ds-badge-success{background:#E6F6F0;color:#07603F;border-color:#A7E3CD;}.ds-badge-warning{background:#FDF4E3;color:#7A4A00;border-color:#F2D8A0;}.ds-badge-danger{background:#FDECEC;color:#8E1616;border-color:#F5B9B9;}.ds-badge-accent{background:#DEF5F7;color:#1C6C73;border-color:#BDEBEF;}"
+    },
+    {
+      "name": "Shell Navigation",
+      "kind": "nav",
+      "refersTo": "shell-panel",
+      "description": "Navy shell nav: overline group label, active item with bright-teal edge bar.",
+      "html": "<nav class=\"ds-shell\"><p>Billing</p><a class=\"active\" href=\"#\">New invoice</a><a href=\"#\">Sales</a><a href=\"#\">Customers</a></nav>",
+      "css": ".ds-shell{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;width:220px;padding:16px 12px;background:#062639;border-radius:12px;display:flex;flex-direction:column;gap:4px;}.ds-shell p{margin:0 0 8px;padding:0 12px;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);}.ds-shell a{position:relative;display:block;padding:9px 12px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);text-decoration:none;border-radius:8px;transition:all 200ms cubic-bezier(0.22, 1, 0.36, 1);}.ds-shell a:hover{background:#0E4763;color:#fff;}.ds-shell a.active{background:#0B3A54;color:#fff;}.ds-shell a.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:20px;border-radius:0 9999px 9999px 0;background:#3AC3CF;}.ds-shell a:focus-visible{outline:2px solid #298E9E;outline-offset:2px;}"
+    },
+    {
+      "name": "Keyboard Chip",
+      "kind": "custom",
+      "refersTo": "kbd",
+      "description": "Shortcut hint; ⌘ on macOS, Ctrl elsewhere.",
+      "html": "<span class=\"ds-kbd-row\">New invoice <kbd class=\"ds-kbd\">⌘</kbd><kbd class=\"ds-kbd\">N</kbd></span>",
+      "css": ".ds-kbd-row{display:inline-flex;align-items:center;gap:4px;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-size:13px;color:#3F5769;}.ds-kbd{display:inline-flex;align-items:center;justify-content:center;height:20px;min-width:20px;padding:0 6px;font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;font-size:10px;font-weight:600;color:#64798B;background:#F8FAFC;border:1px solid #CBD8E3;border-radius:4px;box-shadow:0 1px 2px 0 rgba(12,34,49,0.05);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shop Counter",
+    "overview": "**Creative North Star: \"The Shop Counter\"**\n\nBillSane is built for an owner standing at a busy counter with a customer waiting. Everything they need is one step away, the main action is obvious and big enough to hit without aiming, and nothing on screen is there to be admired. The design proves the product's one claim, simplicity, by never making the owner wait, hunt or decode. This holds on both surfaces. In the desktop app the counter is literal. On the website it is the owner's first visit: the plans are clear, the path to a license is short, and the page never feels like a sales pitch.\n\nThe system is one world in two densities. The desktop client (`../billsane-client`) is the source of truth and the most complete expression of it. It uses light paper-white planes on a cool canvas, ink-navy text, hairline borders, a short and deliberate ladder of shadows, and a dark navy shell (the sidebar and brand panel) that anchors the brand. Teal is the counter's signal colour, used for focus, the active state and the one accent that says \"here\". The website shares the palette, tokens and Inter, and adds its own web layer, influenced by cal.com's patterns but never copying them. That layer has four parts: white cards on the cool canvas edged by a 1px ink ring instead of a border, pill-shaped actions with an inset top highlight, large condensed headlines in Anek Latin, and generous whitespace inside a 1200px column. Its signature is BillSane's own: a dashed perforation rule, the tear line of a printed bill.\n\nThe system is light-only by design. The navy shell is brand chrome, not a dark theme. Motion is short and snappy (160–220ms, one shared ease), and it confirms that something happened rather than performing.",
+    "keyCharacteristics": [
+      "**Palette:** three locked brand colours (Prussian navy `#053247`, counter teal `#298E9E`, palette grey `#F7F7F7`), extended by a semantic layer of ink, surface, line and status tokens.",
+      "**Type:** Inter for everything, with stylistic alternates on. Tabular figures for every rupee, count and ID.",
+      "**Edges and depth:** hairline borders (`#E3EAF1`) do the separating. Low, navy-tinted ambient shadows add depth only where it means something.",
+      "**Shapes:** rounded but not soft. 8px on controls, 16px on cards, full pills only on badges.",
+      "**Chrome:** a dark navy shell for brand panels and navigation chrome, with white surfaces for work.",
+      "**Motion:** one easing curve, `cubic-bezier(0.22, 1, 0.36, 1)`, with short fades and lifts and nothing that bounces."
+    ],
+    "rules": [
+      {
+        "name": "The Signal Rule",
+        "body": "Teal means \"here\": focus, active and the single accent action. If two things on a screen are teal and only one of them is where the owner should look, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic-First Rule",
+        "body": "New code uses `ink`, `surface`, `line`, `shell` and the status tokens, never Tailwind's stock `gray-*`, `slate-*`, `blue-*` or `teal-*`, and never a raw ramp step where a semantic token exists.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light-Only Rule",
+        "body": "There is no dark mode and no `dark:` variant. `color-scheme` is pinned to light, and the navy shell is brand chrome, not a theme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rupee Rule",
+        "body": "Every amount, quantity, invoice number and license figure uses tabular figures (`tnum`), so digits never jitter as values change and columns line up to the pixel.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Inter only, with one exception: website headlines. Weight and size do all the hierarchy work. Monospace appears only inside keyboard chips.",
+        "section": "typography"
+      },
+      {
+        "name": "The One-Step Rule",
+        "body": "The primary action of any screen is visible without scrolling and sits in a predictable place: top right of a page header in the app, and directly under the headline on the website.",
+        "section": "layout"
+      },
+      {
+        "name": "The Deliberate Ladder Rule",
+        "body": "Pick from the scale above and do not add steps. Cards never use `shadow-xl` or `shadow-2xl`, and depth increases only with real elevation: resting card, then hovered card, then menu, then modal.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** reach for the semantic tokens (`ink`, `surface`, `line`, `shell` and the status colours) before any raw ramp step.",
+      "**Do** keep one primary or accent action per view and put it where the One-Step Rule says it goes.",
+      "**Do** set every amount, count and license figure in tabular figures.",
+      "**Do** use the shadow ladder exactly: `card` at rest, `raised` on hover, `pop` for menus and `overlay` for modals.",
+      "**Do** keep motion between 160ms and 220ms on `cubic-bezier(0.22, 1, 0.36, 1)`, as fade, fade-and-lift 8px, or scale-in from 0.96. Respect reduced-motion preferences.",
+      "**Do** use the navy shell for brand chrome (footer, brand panels and app sidebar), with the logo seated on a white plate when it sits on navy.",
+      "**Do** use the one focus treatment everywhere: a 2px teal outline with a 2px offset, and a teal halo on inputs."
+    ],
+    "donts": [
+      "**Don't** use gradient fills on buttons, and don't use gradient-clipped (transparent) text.",
+      "**Don't** use Tailwind's stock `gray-*`, `slate-*`, `blue-*` or `teal-*` colours.",
+      "**Don't** add decorative motion: no bouncing elements, no springy `back.out` eases, no staggered entrance choreography on navigation, and no scale-on-hover for logos or icons.",
+      "**Don't** add a dark mode or `dark:` variants.",
+      "**Don't** use Arial, Geist or any typeface other than Inter, and Anek Latin for website headlines.",
+      "**Don't** put an eyebrow or kicker label (such as `[How it works]`) above a heading, or number sections 01, 02, 03.",
+      "**Don't** use `shadow-xl` or `shadow-2xl` on cards, and don't use grey (`rgba(0,0,0,…)`) shadows.",
+      "**Don't** add decorative blur blobs, skewed bands or animated glows beyond the faint corner wash described in Shapes.",
+      "**Don't** ship placeholder contact details, social links that go nowhere, or links to pages that don't exist."
+    ]
+  }
+}

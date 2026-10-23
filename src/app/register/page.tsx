@@ -1,36 +1,25 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import {
-  CheckCircle,
-  AlertCircle,
-  ChevronRight,
-  ChevronLeft,
-  Copy,
-  Download,
-  Building,
-  User,
-  CheckSquare,
-  CreditCard,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, Copy, Pencil } from "lucide-react";
 import axios from "axios";
-import gsap from "gsap";
-import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Field, { Input, Select } from "@/components/ui/Field";
+import { Container } from "@/components/ui/Section";
+import PlanSummary, { type ChosenPlan } from "@/components/register/PlanSummary";
+import Stepper from "@/components/register/Stepper";
+import { formatPrice } from "@/lib/utils";
+import { Category, Country, State } from "@/types";
 
-// Register GSAP plugins
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollToPlugin);
-}
-
-// Define TypeScript interfaces for our data models
 interface BusinessData {
   business_name: string;
-  categoryId: string;
+  categoryId: number;
   gst_no: string;
   business_branches: number;
   no_of_staff: number;
-  countryId: string;
-  stateId: string;
+  countryId: number;
+  stateId: number;
 }
 
 interface UserData {
@@ -44,32 +33,61 @@ interface ValidationError {
   message: string;
 }
 
-export default function ClientRegistration() {
-  // Refs for GSAP animations
-  const formContainerRef = useRef<HTMLDivElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
-  const stepsRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const buttonContainerRef = useRef<HTMLDivElement>(null);
-  const licenseKeyRef = useRef<HTMLDivElement>(null);
+// The input each validated field lives in, so the first problem can take focus.
+const FIELD_INPUT: Record<string, string> = {
+  business_name: "business_name",
+  categoryId: "category",
+  gst_no: "gst_no",
+  business_branches: "business_branches",
+  no_of_staff: "no_of_staff",
+  countryId: "country",
+  stateId: "state",
+  name: "admin_name",
+  email: "admin_email",
+  phone: "admin_phone",
+};
 
-  // Track current step
+const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/;
+const TAX_ID = /^[A-Z0-9][A-Z0-9\-\s]{3,18}[A-Z0-9]$/;
+
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Razorpay: any;
+  }
+}
+
+export default function ClientRegistration() {
+  // Scroll target on step change: the stepper, so progress stays in view.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const firstRender = useRef(true);
+
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [licenseKey, setLicenseKey] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
-  const [registeredBusiness, setRegisteredBusiness] = useState([]);
+  const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
+  const [registeredBusiness, setRegisteredBusiness] = useState<
+    (BusinessData & { id?: number }) | null
+  >(null);
+  const [adminId, setAdminId] = useState<number | null>(null);
 
-  // Form data state
   const [businessData, setBusinessData] = useState<BusinessData>({
     business_name: "",
-    categoryId: "",
+    categoryId: 0,
     gst_no: "",
     business_branches: 1,
     no_of_staff: 1,
-    countryId: "",
-    stateId: "",
+    countryId: 0,
+    stateId: 0,
   });
 
   const [userData, setUserData] = useState<UserData>({
@@ -78,276 +96,173 @@ export default function ClientRegistration() {
     phone: "",
   });
 
-  // Data lists for dropdowns
-  const [businessCategories, setBusinessCategories] = useState<any[]>([]);
-  const [countries, setCountries] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
-  const [stepsAnimationComplete, setStepsAnimationComplete] = useState(false);
+  const [businessCategories, setBusinessCategories] = useState<Category[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [statesLoading, setStatesLoading] = useState(false);
+  const [mastersFailed, setMastersFailed] = useState(false);
+
+  const [plan, setPlan] = useState<ChosenPlan | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
 
   useEffect(() => {
-    // Initial load animation
-    const tl = gsap.timeline();
-
-    tl.from(formContainerRef.current, {
-      y: 50,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out",
-    });
-
-    tl.from(
-      stepsRef.current?.children || [],
-      {
-        scale: 0.8,
-        opacity: 0,
-        stagger: 0.1,
-        duration: 0.5,
-        ease: "back.out(1.7)",
-        onComplete: () => setStepsAnimationComplete(true),
-      },
-      "-=0.4"
-    );
-
-    // Fetch data from APIs
     const fetchDropdownData = async () => {
       try {
-        // Fetch business categories
-        const categoriesResponse = await axios.get(
-          "/api/masters/category/list"
+        const [categoriesRes, countriesRes] = await Promise.all([
+          axios.get("/api/masters/category/list"),
+          axios.get("/api/masters/country/list"),
+        ]);
+        setBusinessCategories(
+          categoriesRes.data.categoryList.map((cat: Category) => ({ id: cat.id, name: cat.name }))
         );
-        const categoriesData = categoriesResponse.data.categoryList.map(
-          (category: any) => ({
-            id: category.id,
-            name: category.name,
-          })
-        );
-        setBusinessCategories(categoriesData);
-
-        // Fetch countries
-        const countriesResponse = await axios.get("/api/masters/country/list");
-        const countriesData = countriesResponse.data.countryList.map(
-          (country: any) => ({
+        setCountries(
+          countriesRes.data.countryList.map((country: Country) => ({
             id: country.id,
+            code: country.code,
             name: country.name,
-          })
+          }))
         );
-        setCountries(countriesData);
       } catch (error) {
         console.error("Error fetching dropdown data:", error);
+        setMastersFailed(true);
       }
     };
-
     fetchDropdownData();
   }, []);
 
-  // Update progress bar when step changes
+  // The plan chosen on /pricing travels in sessionStorage as `order`.
   useEffect(() => {
-    if (stepsAnimationComplete && progressBarRef.current) {
-      gsap.to(progressBarRef.current, {
-        width: `${(currentStep / 5) * 100}%`,
-        duration: 0.6,
-        ease: "power2.inOut",
-      });
-    }
-  }, [currentStep, stepsAnimationComplete]);
+    const loadPlan = async () => {
+      try {
+        const order = JSON.parse(sessionStorage.getItem("order") ?? "null");
+        if (!order?.planId) return;
+        const res = await axios.get(`/api/masters/plan/list?planId=${order.planId}`);
+        if (res.data.plantList) setPlan(res.data.plantList);
+      } catch (error) {
+        console.error("Error loading chosen plan:", error);
+      } finally {
+        setPlanLoading(false);
+      }
+    };
+    loadPlan();
+  }, []);
 
-  // Animate content when step changes
+  // On every step change after the first, bring the card into view and move
+  // focus to the step's heading so keyboard and screen-reader users follow.
   useEffect(() => {
-    if (contentRef.current) {
-      gsap.fromTo(
-        contentRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-      );
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
     }
-
-    if (buttonContainerRef.current) {
-      gsap.fromTo(
-        buttonContainerRef.current,
-        { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.3, delay: 0.2, ease: "power2.out" }
-      );
-    }
-
-    // Special animation for license key on final step
-    if (currentStep === 4 && licenseKeyRef.current) {
-      gsap.fromTo(
-        licenseKeyRef.current,
-        { scale: 0.9, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 0.7,
-          delay: 0.5,
-          ease: "elastic.out(1, 0.8)",
-        }
-      );
-    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cardRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+    headingRef.current?.focus({ preventScroll: true });
   }, [currentStep]);
 
-  // Validate form data
+  const selectedCountry = countries.find((c) => c.id === businessData.countryId);
+  const isIndia = selectedCountry?.code === "IN";
+
   const validateBusinessData = (): ValidationError[] => {
     const errors: ValidationError[] = [];
-
     if (!businessData.business_name.trim()) {
-      errors.push({
-        field: "business_name",
-        message: "Business name is required",
-      });
+      errors.push({ field: "business_name", message: "Enter your business name" });
     }
-
     if (!businessData.categoryId) {
-      errors.push({
-        field: "categoryId",
-        message: "Business category is required",
-      });
+      errors.push({ field: "categoryId", message: "Choose the kind of business you run" });
     }
-
     if (!businessData.countryId) {
-      errors.push({ field: "countryId", message: "Country is required" });
+      errors.push({ field: "countryId", message: "Choose your country" });
     }
-
     if (!businessData.stateId && businessData.countryId) {
-      errors.push({ field: "stateId", message: "State/Province is required" });
+      errors.push({ field: "stateId", message: "Choose your state or province" });
     }
-
-    if (businessData.business_branches < 1) {
-      errors.push({
-        field: "business_branches",
-        message: "Must have at least 1 branch",
-      });
+    if (!Number.isInteger(businessData.business_branches) || businessData.business_branches < 1) {
+      errors.push({ field: "business_branches", message: "Enter at least 1 branch" });
     }
-
-    if (businessData.no_of_staff < 1) {
-      errors.push({
-        field: "no_of_staff",
-        message: "Must have at least 1 staff member",
-      });
+    if (!Number.isInteger(businessData.no_of_staff) || businessData.no_of_staff < 1) {
+      errors.push({ field: "no_of_staff", message: "Enter at least 1 person" });
     }
-
-    // GST validation if provided (can be optional)
-    if (businessData.gst_no && !validateGSTNumber(businessData.gst_no)) {
+    if (businessData.gst_no && !(isIndia ? GSTIN : TAX_ID).test(businessData.gst_no)) {
       errors.push({
         field: "gst_no",
-        message: "Please enter a valid GST number",
+        message: isIndia
+          ? "Enter a valid 15-character GSTIN, like 27ABCDE1234F1Z5"
+          : "Enter a valid tax registration number",
       });
     }
-
     return errors;
   };
 
   const validateUserData = (): ValidationError[] => {
     const errors: ValidationError[] = [];
-
     if (!userData.name.trim()) {
-      errors.push({ field: "name", message: "Full name is required" });
+      errors.push({ field: "name", message: "Enter the admin's full name" });
     }
-
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!userData.email.trim() || !emailRegex.test(userData.email)) {
-      errors.push({
-        field: "email",
-        message: "Valid email address is required",
-      });
+      errors.push({ field: "email", message: "Enter a valid email address, like you@business.com" });
     }
-
-    // Phone validation (basic)
     const phoneRegex = /^\+?[0-9\s\-()]{8,20}$/;
     if (!userData.phone.trim() || !phoneRegex.test(userData.phone)) {
-      errors.push({
-        field: "phone",
-        message: "Valid phone number is required",
-      });
+      errors.push({ field: "phone", message: "Enter a valid phone number, with country code" });
     }
     return errors;
   };
 
-  // Validate GST number (basic implementation - would need country-specific validation in production)
-  const validateGSTNumber = (gst: string): boolean => {
-    const gstRegex =
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/;
-    if (!gstRegex.test(gst)) {
-      return false;
-    }
-    return true;
-  };
+  const handleBusinessChange = async (field: keyof BusinessData, value: string | number) => {
+    setBusinessData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => prev.filter((error) => error.field !== field && error.field !== "general"));
 
-  // Update business data fields
-  const handleBusinessChange = async (
-    field: keyof BusinessData,
-    value: string | number
-  ) => {
-    setBusinessData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // If changing country, reset state
     if (field === "countryId") {
-      setBusinessData((prev) => ({
-        ...prev,
-        stateId: "",
-      }));
-
-      const statesResponse = await axios.get(
-        `/api/masters/state/list?countryId=${value}`
-      );
-      const statesData = statesResponse.data.stateList.map((state: any) => ({
-        id: state.id,
-        name: state.name,
-        countryId: state.countryId,
-      }));
-      console.log(statesData);
-
-      setStates(statesData);
+      setBusinessData((prev) => ({ ...prev, stateId: 0 }));
+      setStates([]);
+      if (!value) return;
+      setStatesLoading(true);
+      try {
+        const statesResponse = await axios.get(`/api/masters/state/list?countryId=${value}`);
+        setStates(
+          statesResponse.data.stateList.map((state: State) => ({
+            id: state.id,
+            name: state.name,
+            countryId: state.countryId,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching states:", error);
+        setErrors((prev) => [
+          ...prev,
+          { field: "stateId", message: "We couldn't load states. Choose the country again." },
+        ]);
+      } finally {
+        setStatesLoading(false);
+      }
     }
-
-    // Clear related error if present
-    setErrors((prev) => prev.filter((error) => error.field !== field));
   };
 
-  // Update user data fields
-  const handleUserChange = (field: keyof UserData, value: string | boolean) => {
-    setUserData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Clear related error if present
-    setErrors((prev) => prev.filter((error) => error.field !== field));
+  const handleUserChange = (field: keyof UserData, value: string) => {
+    setUserData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => prev.filter((error) => error.field !== field && error.field !== "general"));
   };
 
-  // Go to next step with validation
+  const showErrors = (found: ValidationError[]) => {
+    setErrors(found);
+    const first = FIELD_INPUT[found[0]?.field];
+    if (first) requestAnimationFrame(() => document.getElementById(first)?.focus());
+  };
+
   const handleNextStep = () => {
-    let currentErrors: ValidationError[] = [];
-
-    if (currentStep === 1) {
-      currentErrors = validateBusinessData();
-    } else if (currentStep === 2) {
-      currentErrors = validateUserData();
-    }
-
-    if (currentErrors.length > 0) {
-      setErrors(currentErrors);
-
-      // Shake the form container to indicate validation errors
-      gsap.to(formContainerRef.current, {
-        keyframes: [{ x: -10 }, { x: 10 }, { x: -5 }, { x: 5 }, { x: 0 }],
-        duration: 0.4,
-        ease: "power1.inOut",
-      });
-
+    const found =
+      currentStep === 1 ? validateBusinessData() : currentStep === 2 ? validateUserData() : [];
+    if (found.length > 0) {
+      showErrors(found);
       return;
     }
-
     if (currentStep < 4) {
       setErrors([]);
       setCurrentStep(currentStep + 1);
     }
   };
 
-  // Go to previous step
   const handlePrevStep = () => {
     if (currentStep > 1) {
       setErrors([]);
@@ -355,890 +270,510 @@ export default function ClientRegistration() {
     }
   };
 
-  // Submit the registration form
+  // Creates the business and its admin. Only moves on to payment when that worked.
   const handleSubmit = async () => {
+    setLoading(true);
+    setErrors([]);
     try {
-      setLoading(true);
-
-      // Simulate API call with loading state
-      // In a real app, send data to backend
-      console.log("Business Data:", businessData);
-      console.log("User Data:", userData);
-
-      const payload = {
+      const response = await axios.post("/api/business/create", {
         ...businessData,
         adminUser: userData,
-      };
-
-      await axios
-        .post("/api/business/create", payload)
-        .then((response) => {
-          setRegisteredBusiness(response.data.business);
-        })
-        .catch((error) => {
-          console.error("Error creating business:", error);
-          setLoading(false);
-          // Show a general error
-          setErrors([
-            {
-              field: "general",
-              message: "Failed to complete registration. Please try again.",
-            },
-          ]);
-        });
+      });
+      setRegisteredBusiness(response.data.business);
+      setAdminId(response.data.admin?.id ?? null);
       setIsCompleted(true);
       setCurrentStep(4);
-      setLoading(false);
     } catch (error) {
-      console.error("Error registering client:", error);
-      setLoading(false);
-
-      // Show a general error
+      console.error("Error creating business:", error);
       setErrors([
         {
           field: "general",
-          message: "Failed to complete registration. Please try again.",
+          message: "We couldn't complete your registration. Check your connection and try again.",
         },
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Generate a license key (mock implementation)
-  const generateLicenseKey = async () => {
+  const loadCheckoutScript = () =>
+    new Promise<boolean>((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  const paymentError = (message: string) => {
+    setLoading(false);
+    setErrors([{ field: "general", message }]);
+  };
+
+  // Opens Razorpay Checkout. The license is issued by the server only after it
+  // verifies the payment signature.
+  const handlePayment = async () => {
+    setLoading(true);
+    setErrors([]);
     try {
-      const response = await axios.post("/api/license/generate", {
+      if (!registeredBusiness?.id || !adminId || !plan) {
+        throw new Error("Missing business, admin or plan");
+      }
+      if (!(await loadCheckoutScript())) {
+        return paymentError("We couldn't load the payment window. Check your connection and try again.");
+      }
+      const { data: order } = await axios.post("/api/payment/create-order", {
         businessId: registeredBusiness.id,
-        staffLimit: registeredBusiness.no_of_staff,
+        userId: adminId,
+        planId: plan.id,
       });
-      setLicenseKey(response.data.license);
-      setCurrentStep(5);
-    } catch (error) {
-      console.error("Error generating license key:", error);
-    }
-  };
 
-  // Copy license key to clipboard
-  const copyLicenseKey = () => {
-    navigator.clipboard.writeText(licenseKey);
-
-    // Show copy animation
-    if (licenseKeyRef.current) {
-      gsap.to(licenseKeyRef.current, {
-        scale: 1.05,
-        duration: 0.2,
-        ease: "power1.out",
-        onComplete: () => {
-          gsap.to(licenseKeyRef.current, {
-            scale: 1,
-            duration: 0.2,
-            ease: "power1.in",
-          });
+      const checkout = new window.Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: "BillSane",
+        description: order.planName,
+        prefill: { name: userData.name, email: userData.email, contact: userData.phone },
+        handler: async (res: RazorpayResponse) => {
+          try {
+            const { data } = await axios.post("/api/payment/verify", res);
+            setLicenseKey(data.license);
+            setCurrentStep(5);
+            setLoading(false);
+          } catch (error) {
+            console.error("Error verifying payment:", error);
+            paymentError(
+              "We couldn't confirm your payment. If money was deducted, contact support with your payment ID: " +
+                res.razorpay_payment_id
+            );
+          }
         },
+        modal: { ondismiss: () => setLoading(false) },
       });
+      checkout.on("payment.failed", () =>
+        paymentError("The payment didn't go through. Please try again.")
+      );
+      checkout.open();
+    } catch (error) {
+      console.error("Error starting payment:", error);
+      paymentError("We couldn't start the payment. Please try again in a moment.");
     }
-
-    // Show a temporary tooltip (in a real app, use a toast notification)
-    alert("License key copied to clipboard!");
   };
 
-  // Check if a specific field has an error
-  const hasError = (field: string): boolean => {
-    return errors.some((error) => error.field === field);
+  const copyLicenseKey = async () => {
+    try {
+      await navigator.clipboard.writeText(licenseKey);
+      setCopied("copied");
+    } catch {
+      setCopied("failed");
+    }
+    setTimeout(() => setCopied("idle"), 2400);
   };
 
-  // Get error message for a specific field
-  const getErrorMessage = (field: string): string => {
-    const error = errors.find((error) => error.field === field);
-    return error ? error.message : "";
-  };
+  const errorFor = (field: string) => errors.find((error) => error.field === field)?.message;
+
+  const generalError = errorFor("general");
+  const stepHeading = (title: string, description: string) => (
+    <header className="mb-8">
+      <h2
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-[1.75rem] font-semibold leading-tight text-ink outline-none sm:text-[2rem]"
+      >
+        {title}
+      </h2>
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">{description}</p>
+    </header>
+  );
+
+  const reviewRow = (label: string, value: string) => (
+    <div className="py-3 sm:grid sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-4">
+      <dt className="text-sm text-ink-muted">{label}</dt>
+      <dd className="mt-0.5 break-words text-[15px] font-medium text-ink sm:mt-0">{value}</dd>
+    </div>
+  );
 
   return (
-    // bg is pending
-    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl w-full space-y-8" ref={formContainerRef}>
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary-800 sm:text-4xl tracking-tight">
-            Business Registration
+    <div className="bg-canvas pb-20 pt-10 sm:pb-28 sm:pt-16">
+      <Container>
+        <header data-hero className="max-w-2xl">
+          <h1 className="text-[2.5rem] font-semibold leading-[1.05] text-ink sm:text-5xl">
+            Register your business
           </h1>
-          <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-            Join the BillSane ecosystem and streamline your business operations
-            today
+          <p className="mt-4 text-lg leading-relaxed text-ink-soft">
+            A few details about your business and who will manage it, then payment.
+            Your license key is ready at the end.
           </p>
+        </header>
+
+        <div ref={cardRef} className="mt-10 scroll-mt-24">
+          <Stepper current={currentStep} />
         </div>
 
-        {/* Stepper Progress */}
-        <div
-          className="flex justify-between items-center mt-12 mb-8 relative"
-          ref={stepsRef}
-        >
-          {[1, 2, 3, 4, 5].map((step) => (
-            <div
-              key={step}
-              className="flex flex-col items-center relative z-10"
-            >
-              <div
-                className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
-                  currentStep > step
-                    ? "bg-green-500 text-white"
-                    : currentStep === step
-                    ? "bg-munsell_blue-700 text-white ring-4 ring-munsell_blue-700/60"
-                    : "bg-white text-gray-400"
-                }`}
-              >
-                {currentStep > step ? (
-                  <CheckCircle size={24} className="text-white" />
-                ) : step === 1 ? (
-                  <Building size={20} />
-                ) : step === 2 ? (
-                  <User size={20} />
-                ) : step === 3 ? (
-                  <CheckSquare size={20} />
-                ) : step === 4 ? (
-                  <CreditCard size={20} />
-                ) : (
-                  <Copy size={20} />
-                )}
-              </div>
-              <div
-                className={`text-sm mt-3 font-medium transition-all duration-300 ${
-                  currentStep === step ? "text-prussian_blue" : "text-gray-600"
-                }`}
-              >
-                {step === 1 && "Business Info"}
-                {step === 2 && "Admin Details"}
-                {step === 3 && "Review"}
-                {step === 4 && "Payment"}
-                {step === 5 && "License Key"}
-              </div>
-            </div>
-          ))}
-
-          {/* Connecting line between steps */}
-          <div className="absolute top-7 left-0 w-full h-0.5 bg-gray-200 -z-10" />
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-          <div
-            ref={progressBarRef}
-            className="bg-gradient-to-r from-munsell_blue-700 to-munsell_blue-500 h-2 rounded-full transition-all duration-500 ease-in-out"
-            style={{ width: `${(currentStep / 5) * 100}%` }}
-          />
-        </div>
-
-        {/* Main Content Card */}
-        <div className="bg-white shadow-2xl rounded-xl overflow-hidden transition-all duration-500">
-          <div ref={contentRef} className="p-8">
-            {/* Step 1: Business Information */}
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-3 bg-munsell_blue-200 rounded-full">
-                    <Building size={24} className="text-munsell_blue-700" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary-800">
-                      Business Information
-                    </h2>
-                    <p className="text-primary-600">
-                      Tell us about your business to get started with BillSane.
-                    </p>
-                  </div>
-                </div>
-
-                {/* General error message if any */}
-                {hasError("general") && (
-                  <div className="p-3 bg-red-50 text-red-700 rounded-lg flex items-center space-x-2 mb-4">
-                    <AlertCircle size={18} />
-                    <span>{getErrorMessage("general")}</span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      htmlFor="business_name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Business Name
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="business_name"
-                      value={businessData.business_name}
-                      onChange={(e) =>
-                        handleBusinessChange("business_name", e.target.value)
-                      }
-                      className={` ${
-                        hasError("business_name")
-                          ? "input-error"
-                          : "input-success"
-                      } `}
-                      placeholder="Your Business Name"
-                    />
-                    {hasError("business_name") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("business_name")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Business Category
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <select
-                      id="category"
-                      value={businessData.categoryId}
-                      onChange={(e) =>
-                        handleBusinessChange(
-                          "categoryId",
-                          Number(e.target.value)
-                        )
-                      }
-                      className={`appearance-none
-                         ${
-                           hasError("categoryId")
-                             ? "input-error"
-                             : "input-success"
-                         }`}
-                      style={{
-                        backgroundImage:
-                          "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
-                        backgroundPosition: "right 0.5rem center",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "1.5em 1.5em",
-                        paddingRight: "2.5rem",
-                      }}
-                    >
-                      <option value="">Select Category</option>
-                      {businessCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    {hasError("categoryId") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("categoryId")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="gst_no"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      GST Number
-                    </label>
-                    <input
-                      type="text"
-                      id="gst_no"
-                      value={businessData.gst_no}
-                      onChange={(e) =>
-                        handleBusinessChange("gst_no", e.target.value)
-                      }
-                      className={`${
-                        hasError("gst_no") ? "input-error" : "input-success"
-                      }`}
-                      placeholder="GST Number (if applicable)"
-                    />
-                    {hasError("gst_no") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("gst_no")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="business_branches"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Number of Branches
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      id="business_branches"
-                      min="1"
-                      value={businessData.business_branches}
-                      onChange={(e) =>
-                        handleBusinessChange(
-                          "business_branches",
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className={`${
-                        hasError("business_branches")
-                          ? "input-error"
-                          : "input-success"
-                      }`}
-                    />
-                    {hasError("business_branches") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("business_branches")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="no_of_staff"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Number of Staff
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      id="no_of_staff"
-                      min="1"
-                      value={businessData.no_of_staff}
-                      onChange={(e) =>
-                        handleBusinessChange(
-                          "no_of_staff",
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className={`${
-                        hasError("no_of_staff")
-                          ? "input-error"
-                          : "input-success"
-                      }`}
-                    />
-                    {hasError("no_of_staff") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("no_of_staff")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="country"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Country<span className="text-sm text-red-500">*</span>
-                    </label>
-                    <select
-                      id="country"
-                      value={businessData.countryId}
-                      onChange={(e) =>
-                        handleBusinessChange(
-                          "countryId",
-                          Number(e.target.value)
-                        )
-                      }
-                      className={`appearance-none ${
-                        hasError("countryId") ? "input-error" : "input-success"
-                      }`}
-                      style={{
-                        backgroundImage:
-                          "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
-                        backgroundPosition: "right 0.5rem center",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "1.5em 1.5em",
-                        paddingRight: "2.5rem",
-                      }}
-                    >
-                      <option value="">Select Country</option>
-                      {countries.map((country) => (
-                        <option key={country.id} value={country.id}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                    {hasError("countryId") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("countryId")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="state"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      State/Province
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <select
-                      id="state"
-                      value={businessData.stateId}
-                      onChange={(e) => {
-                        console.log(e.target.value);
-                        handleBusinessChange("stateId", Number(e.target.value));
-                      }}
-                      className={`appearance-none ${
-                        hasError("stateId") ? "input-error" : "input-success"
-                      }
-                      ${
-                        !businessData.countryId
-                          ? "bg-gray-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                      disabled={!businessData.countryId}
-                      style={{
-                        backgroundImage:
-                          "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
-                        backgroundPosition: "right 0.5rem center",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "1.5em 1.5em",
-                        paddingRight: "2.5rem",
-                      }}
-                    >
-                      <option value="">Select State</option>
-                      {states.map((state) => (
-                        <option key={state.id} value={state.id}>
-                          {state.name}
-                        </option>
-                      ))}
-                    </select>
-                    {hasError("stateId") && businessData.countryId && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("stateId")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Admin User Details */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-3 bg-munsell_blue-200 rounded-full">
-                    <User size={24} className="text-munsell_blue-700" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary-800">
-                      Admin User Details
-                    </h2>
-                    <p className="text-primary-600">
-                      This user will have full administrative access to your
-                      BillSane account.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      htmlFor="admin_name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Full Name
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="admin_name"
-                      value={userData.name}
-                      onChange={(e) => handleUserChange("name", e.target.value)}
-                      className={`${
-                        hasError("name") ? "input-error" : "input-success"
-                      }`}
-                      placeholder="Your Full Name"
-                    />
-                    {hasError("name") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("name")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="admin_email"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Email Address
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="admin_email"
-                      value={userData.email}
-                      onChange={(e) =>
-                        handleUserChange("email", e.target.value)
-                      }
-                      className={`${
-                        hasError("email") ? "input-error" : "input-success"
-                      }`}
-                      placeholder="you@example.com"
-                    />
-                    {hasError("email") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("email")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="admin_phone"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Phone Number
-                      <span className="text-sm text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      id="admin_phone"
-                      value={userData.phone}
-                      onChange={(e) =>
-                        handleUserChange("phone", e.target.value)
-                      }
-                      className={`${
-                        hasError("phone") ? "input-error" : "input-success"
-                      }`}
-                      placeholder="Your Phone Number"
-                    />
-                    {hasError("phone") && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {getErrorMessage("phone")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <div className="flex items-center p-4 rounded-lg bg-blue-50 border border-blue-100">
-                      <label
-                        htmlFor="is_admin"
-                        className="ml-3 block text-sm text-gray-700"
-                      >
-                        This user will be an admin with full access to all
-                        features and settings
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg mt-8">
-                  <h3 className="font-medium text-amber-800 mb-1">
-                    Security Note
-                  </h3>
-                  <p className="text-sm text-amber-700">
-                    The admin user will receive a verification email to confirm
-                    their identity. They will need to set a secure password upon
-                    first login.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Review Information */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-3 bg-munsell_blue-200 rounded-full">
-                    <CheckSquare size={24} className="text-munsell_blue-700" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary-800">
-                      Review Your Information
-                    </h2>
-                    <p className="text-primary-600">
-                      Please confirm that the following details are correct
-                      before proceeding.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="bg-gradient-to-r from-munsell_blue-700 to-munsell_blue-600 px-4 py-3">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <Building size={20} className="mr-2" />
-                        Business Information
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Business Name
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {businessData.business_name || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Business Category
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {businessCategories.find(
-                            (c) => c.id == businessData.categoryId
-                          )?.name || "Not selected"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          GST Number
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {businessData.gst_no || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Number of Branches
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {businessData.business_branches}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Number of Staff
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {businessData.no_of_staff}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Country
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {countries.find((c) => c.id == businessData.countryId)
-                            ?.name || "Not selected"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          State/Province
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {states.find((s) => s.id == businessData.stateId)
-                            ?.name || "Not selected"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="bg-gradient-to-r from-munsell_blue-700 to-munsell_blue-600 px-4 py-3">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <User size={20} className="mr-2" />
-                        Admin User Information
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Full Name
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {userData.name || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Email Address
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {userData.email || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Phone Number
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1">
-                          {userData.phone || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          User Role
-                        </p>
-                        <p className="text-base font-medium text-gray-800 mt-1 flex items-center">
-                          <span className="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full flex items-center">
-                            <CheckCircle size={14} className="mr-1" />
-                            Administrator
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 border-l-4 border-munsell_blue-500 bg-blue-50 mt-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <AlertCircle className="h-5 w-5 text-munsell_blue-600" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-munsell_blue-700">
-                        By completing this registration, you agree to BillSane's
-                        Terms of Service and Privacy Policy.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Payment */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-3 bg-munsell_blue-200 rounded-full">
-                    <CreditCard size={24} className="text-munsell_blue-700" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary-800">
-                      Payment
-                    </h2>
-                    <p className="text-primary-600">
-                      Please complete your payment to finalize the registration
-                      process.{" "}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <button
-                    onClick={generateLicenseKey}
-                    className="bg-munsell_blue cursor-pointer py-3 w-full rounded-lg text-white font-semibold shadow-md hover:bg-munsell_blue-700 transition duration-200 flex items-center justify-center space-x-2"
-                  >
-                    Pay
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: License Key */}
-            {currentStep === 5 && (
-              <div className="space-y-8 text-center">
-                <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100">
-                  <CheckCircle size={48} className="text-green-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-primary-800">
-                  Registration Complete!
-                </h2>
-                <p className="text-primary-600 max-w-lg mx-auto">
-                  Your business has been successfully registered with BillSane.
-                  Please use the license key below to activate your desktop
-                  application.
-                </p>
-
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
+          <div className="rounded-2xl bg-surface shadow-card">
+            <div key={currentStep} className="step-enter p-6 sm:p-10">
+              {(generalError || mastersFailed) && (
                 <div
-                  ref={licenseKeyRef}
-                  className="bg-gradient-to-br from-munsell_blue-50/80 to-munsell_blue-100 p-8 rounded-xl shadow-inner text-center mx-auto max-w-2xl"
+                  role="alert"
+                  className="mb-8 flex items-start gap-3 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink shadow-[inset_0_0_0_1px_var(--color-danger-border)]"
                 >
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    Your License Key
-                  </h3>
-                  <div className="bg-white border border-gray-300 rounded-lg p-4 font-mono text-xl tracking-wider shadow-sm">
-                    {licenseKey}
+                  <AlertCircle size={18} aria-hidden="true" className="mt-px shrink-0" />
+                  <span>
+                    {generalError ??
+                      "We couldn't load business categories and countries. Refresh the page to try again."}
+                  </span>
+                </div>
+              )}
+
+              {currentStep === 1 && (
+                <>
+                  {stepHeading(
+                    "About your business",
+                    "This is how your business will appear in BillSane and on your bills."
+                  )}
+                  <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+                    <Field
+                      label="Business name"
+                      htmlFor="business_name"
+                      required
+                      error={errorFor("business_name")}
+                      className="md:col-span-2"
+                    >
+                      <Input
+                        id="business_name"
+                        autoComplete="organization"
+                        value={businessData.business_name}
+                        invalid={!!errorFor("business_name")}
+                        onChange={(e) => handleBusinessChange("business_name", e.target.value)}
+                        placeholder="As it should appear on your bills"
+                      />
+                    </Field>
+
+                    <Field label="Type of business" htmlFor="category" required error={errorFor("categoryId")}>
+                      <Select
+                        id="category"
+                        value={businessData.categoryId || ""}
+                        invalid={!!errorFor("categoryId")}
+                        onChange={(e) => handleBusinessChange("categoryId", Number(e.target.value))}
+                      >
+                        <option value="">Choose a category</option>
+                        {businessCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+
+                    <Field
+                      label="Tax registration number"
+                      htmlFor="gst_no"
+                      error={errorFor("gst_no")}
+                      hint={isIndia ? "Your 15-character GSTIN, if you have one." : "GST or VAT number, if you have one."}
+                    >
+                      <Input
+                        id="gst_no"
+                        value={businessData.gst_no}
+                        invalid={!!errorFor("gst_no")}
+                        onChange={(e) => handleBusinessChange("gst_no", e.target.value.toUpperCase())}
+                        placeholder="Optional"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                      />
+                    </Field>
+
+                    <Field label="Country" htmlFor="country" required error={errorFor("countryId")}>
+                      <Select
+                        id="country"
+                        autoComplete="country-name"
+                        value={businessData.countryId || ""}
+                        invalid={!!errorFor("countryId")}
+                        onChange={(e) => handleBusinessChange("countryId", Number(e.target.value))}
+                      >
+                        <option value="">Choose a country</option>
+                        {countries.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+
+                    <Field
+                      label="State or province"
+                      htmlFor="state"
+                      required
+                      error={businessData.countryId ? errorFor("stateId") : undefined}
+                      hint={!businessData.countryId ? "Choose a country first." : undefined}
+                    >
+                      <Select
+                        id="state"
+                        value={businessData.stateId || ""}
+                        invalid={!!businessData.countryId && !!errorFor("stateId")}
+                        disabled={!businessData.countryId || statesLoading}
+                        onChange={(e) => handleBusinessChange("stateId", Number(e.target.value))}
+                      >
+                        <option value="">{statesLoading ? "Loading…" : "Choose a state"}</option>
+                        {states.map((state) => (
+                          <option key={state.id} value={state.id}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+
+                    <Field label="Branches" htmlFor="business_branches" required error={errorFor("business_branches")}>
+                      <Input
+                        id="business_branches"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        className="tnum"
+                        value={Number.isNaN(businessData.business_branches) ? "" : businessData.business_branches}
+                        invalid={!!errorFor("business_branches")}
+                        onChange={(e) => handleBusinessChange("business_branches", parseInt(e.target.value))}
+                      />
+                    </Field>
+
+                    <Field
+                      label="People on your team"
+                      htmlFor="no_of_staff"
+                      required
+                      error={errorFor("no_of_staff")}
+                      hint="Everyone who will use BillSane, including you."
+                    >
+                      <Input
+                        id="no_of_staff"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        className="tnum"
+                        value={Number.isNaN(businessData.no_of_staff) ? "" : businessData.no_of_staff}
+                        invalid={!!errorFor("no_of_staff")}
+                        onChange={(e) => handleBusinessChange("no_of_staff", parseInt(e.target.value))}
+                      />
+                    </Field>
                   </div>
-                  <p className="text-sm text-gray-600 mt-3">
-                    This key has been sent to your registered email address as
-                    well.
+                </>
+              )}
+
+              {currentStep === 2 && (
+                <>
+                  {stepHeading(
+                    "Who will manage BillSane?",
+                    "This person is the administrator, with full access to every feature and setting. They can add the rest of your team later."
+                  )}
+                  <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+                    <Field label="Full name" htmlFor="admin_name" required error={errorFor("name")} className="md:col-span-2">
+                      <Input
+                        id="admin_name"
+                        autoComplete="name"
+                        value={userData.name}
+                        invalid={!!errorFor("name")}
+                        onChange={(e) => handleUserChange("name", e.target.value)}
+                      />
+                    </Field>
+                    <Field label="Email address" htmlFor="admin_email" required error={errorFor("email")}>
+                      <Input
+                        id="admin_email"
+                        type="email"
+                        autoComplete="email"
+                        value={userData.email}
+                        invalid={!!errorFor("email")}
+                        onChange={(e) => handleUserChange("email", e.target.value)}
+                        placeholder="you@business.com"
+                      />
+                    </Field>
+                    <Field
+                      label="Phone number"
+                      htmlFor="admin_phone"
+                      required
+                      error={errorFor("phone")}
+                      hint="Include your country code."
+                    >
+                      <Input
+                        id="admin_phone"
+                        type="tel"
+                        autoComplete="tel"
+                        value={userData.phone}
+                        invalid={!!errorFor("phone")}
+                        onChange={(e) => handleUserChange("phone", e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                </>
+              )}
+
+              {currentStep === 3 && (
+                <>
+                  {stepHeading("Check your details", "Make sure everything is right before you continue.")}
+                  <div className="space-y-6">
+                    <section className="rounded-xl bg-canvas px-5 py-2 shadow-ring">
+                      <div className="flex items-center justify-between border-b border-line py-3">
+                        <h3 className="font-sans text-base font-semibold tracking-normal text-ink">Business</h3>
+                        <Button variant="ghost" size="sm" icon={<Pencil size={13} aria-hidden="true" />} onClick={() => setCurrentStep(1)}>
+                          Edit
+                        </Button>
+                      </div>
+                      <dl className="divide-y divide-line">
+                        {reviewRow("Business name", businessData.business_name)}
+                        {reviewRow(
+                          "Type of business",
+                          businessCategories.find((c) => c.id === businessData.categoryId)?.name ?? "Not chosen"
+                        )}
+                        {reviewRow("Tax registration number", businessData.gst_no || "Not provided")}
+                        {reviewRow(
+                          "Location",
+                          [states.find((s) => s.id === businessData.stateId)?.name, selectedCountry?.name]
+                            .filter(Boolean)
+                            .join(", ")
+                        )}
+                        {reviewRow("Branches", String(businessData.business_branches))}
+                        {reviewRow("People on your team", String(businessData.no_of_staff))}
+                      </dl>
+                    </section>
+
+                    <section className="rounded-xl bg-canvas px-5 py-2 shadow-ring">
+                      <div className="flex items-center justify-between border-b border-line py-3">
+                        <h3 className="flex items-center gap-2.5 font-sans text-base font-semibold tracking-normal text-ink">
+                          Administrator
+                          <Badge tone="brand">Full access</Badge>
+                        </h3>
+                        <Button variant="ghost" size="sm" icon={<Pencil size={13} aria-hidden="true" />} onClick={() => setCurrentStep(2)}>
+                          Edit
+                        </Button>
+                      </div>
+                      <dl className="divide-y divide-line">
+                        {reviewRow("Full name", userData.name)}
+                        {reviewRow("Email address", userData.email)}
+                        {reviewRow("Phone number", userData.phone)}
+                      </dl>
+                    </section>
+
+                    <p className="text-sm leading-relaxed text-ink-muted">
+                      By completing registration, you agree to BillSane&apos;s Terms of Service and Privacy
+                      Policy.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {currentStep === 4 && (
+                <>
+                  {stepHeading(
+                    "Payment",
+                    "Your business is registered. Pay for your plan to get your license key."
+                  )}
+                  <div className="rounded-xl bg-canvas p-5 shadow-ring">
+                    {plan ? (
+                      <div className="flex flex-wrap items-baseline justify-between gap-3">
+                        <div>
+                          <p className="text-base font-semibold text-ink">{plan.name}</p>
+                          <p className="mt-0.5 text-sm text-ink-muted">One-time payment · lifetime license</p>
+                        </div>
+                        <p className="tnum font-display text-3xl font-semibold text-ink [font-stretch:92%]">
+                          {formatPrice(plan.price)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-ink-muted">
+                        No plan chosen.{" "}
+                        <a href="/pricing" className="font-semibold text-munsell_blue-700 underline underline-offset-4">
+                          Choose a plan
+                        </a>{" "}
+                        to see what you&apos;ll pay.
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    fullWidth
+                    className="mt-6"
+                    loading={loading}
+                    onClick={handlePayment}
+                  >
+                    {plan ? `Pay ${formatPrice(plan.price)}` : "Pay"}
+                  </Button>
+                  <p className="mt-3 text-center text-[13px] text-ink-muted">Payments are processed by Razorpay.</p>
+                </>
+              )}
+
+              {currentStep === 5 && (
+                <div className="text-center">
+                  <span className="inline-flex size-14 items-center justify-center rounded-full bg-success-soft text-success shadow-[inset_0_0_0_1px_var(--color-success-border)]">
+                    <Check size={28} strokeWidth={2.5} aria-hidden="true" />
+                  </span>
+                  <h2
+                    ref={headingRef}
+                    tabIndex={-1}
+                    className="mt-5 text-[1.75rem] font-semibold leading-tight text-ink outline-none sm:text-[2rem]"
+                  >
+                    You&apos;re registered
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-ink-muted">
+                    {businessData.business_name} is set up with BillSane. Keep your license key somewhere
+                    safe: you&apos;ll use it to activate the desktop app.
                   </p>
-                </div>
 
-                <div className="flex flex-col space-y-4 max-w-xs mx-auto">
-                  <button
-                    onClick={copyLicenseKey}
-                    className="bg-munsell_blue-600 text-white py-3 px-6 rounded-lg hover:bg-munsell_blue-700 transition duration-200 flex items-center justify-center space-x-2 shadow-lg"
-                  >
-                    <Copy size={18} />
-                    <span>Copy License Key</span>
-                  </button>
-
-                  <a
-                    href="#"
-                    className="flex items-center justify-center space-x-2 text-munsell_blue-700 hover:text-munsell_blue-800 hover:underline text-sm"
-                  >
-                    <Download size={16} />
-                    <span>Download BillSane Desktop Application</span>
-                  </a>
+                  <div className="bill-paper mx-auto mt-8 max-w-xl rounded-b-2xl bg-canvas px-6 pb-6 pt-8 shadow-[inset_0_0_0_1px_rgb(12_34_49_/_0.1)]">
+                    <p className="text-[13px] font-semibold text-ink-soft">Your license key</p>
+                    <p className="mt-2 select-all break-all font-mono text-lg font-semibold tracking-[0.06em] text-ink sm:text-xl">
+                      {licenseKey}
+                    </p>
+                    <Button
+                      variant="primary"
+                      className="mt-5"
+                      icon={
+                        copied === "copied" ? (
+                          <Check size={16} aria-hidden="true" />
+                        ) : (
+                          <Copy size={16} aria-hidden="true" />
+                        )
+                      }
+                      onClick={copyLicenseKey}
+                    >
+                      {copied === "copied" ? "Copied" : "Copy key"}
+                    </Button>
+                    <p aria-live="polite" className="mt-3 min-h-5 text-[13px] text-ink-muted">
+                      {copied === "failed" ? "Couldn't copy automatically. Select the key and copy it." : ""}
+                    </p>
+                  </div>
                 </div>
+              )}
+            </div>
+
+            {!isCompleted && currentStep < 4 && (
+              <div className="flex items-center justify-between gap-3 rounded-b-2xl border-t border-line bg-surface-subtle px-6 py-4 sm:px-10">
+                {currentStep > 1 ? (
+                  <Button variant="ghost" icon={<ArrowLeft size={16} aria-hidden="true" />} onClick={handlePrevStep}>
+                    Back
+                  </Button>
+                ) : (
+                  <span />
+                )}
+                {currentStep < 3 ? (
+                  <Button variant="primary" trailing={<ArrowRight size={16} aria-hidden="true" />} onClick={handleNextStep}>
+                    Continue
+                  </Button>
+                ) : (
+                  <Button variant="primary" loading={loading} onClick={handleSubmit}>
+                    {loading ? "Registering…" : "Complete registration"}
+                  </Button>
+                )}
               </div>
             )}
           </div>
 
-          {/* Navigation Buttons */}
-          {!isCompleted && currentStep !== 4 && (
-            <div
-              ref={buttonContainerRef}
-              className="flex justify-between mt-4 px-8 py-6 bg-gray-50 border-t border-gray-200"
-            >
-              {currentStep > 1 ? (
-                <button
-                  onClick={handlePrevStep}
-                  className="py-2 px-6 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200 flex items-center"
-                >
-                  <ChevronLeft size={18} className="mr-1" />
-                  Previous
-                </button>
-              ) : (
-                <div></div> // Empty div to maintain layout
-              )}
-
-              {currentStep < 3 ? (
-                <button
-                  onClick={handleNextStep}
-                  className="bg-munsell_blue-600 cursor-pointer text-white py-2 px-6 rounded-lg hover:bg-munsell_blue-700 transition duration-200 flex items-center shadow-md"
-                >
-                  Next
-                  <ChevronRight size={18} className="ml-1" />
-                </button>
-              ) : currentStep === 3 ? (
-                <button
-                  onClick={handleSubmit}
-                  className={`bg-munsell_blue-600 cursor-pointer text-white py-2 px-6 rounded-lg hover:bg-munsell_blue-700 transition duration-200 flex items-center shadow-md ${
-                    loading ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      Complete Registration
-                      <CheckCircle size={18} className="ml-2" />
-                    </>
-                  )}
-                </button>
-              ) : null}
-            </div>
-          )}
+          <div className="lg:sticky lg:top-24">
+            <PlanSummary plan={plan} loading={planLoading} locked={isCompleted} />
+          </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

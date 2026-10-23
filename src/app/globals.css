@@ -1,70 +1,278 @@
 @import "tailwindcss";
 
-
-@theme{
-/* Prussian Blue */
---color-prussian_blue: #053247;
---color-prussian_blue-5: #ECF8FE;
---color-prussian_blue-25: #B1E2FB;
---color-prussian_blue-50: #8BD4F9;
---color-prussian_blue-100: #64C6F7;
---color-prussian_blue-200: #54C0F2;
---color-prussian_blue-300: #3DB8F5;
---color-prussian_blue-400: #16A9F3;
---color-prussian_blue-500: #0B92D5;
---color-prussian_blue-600: #0977AE;
---color-prussian_blue-700: #075D88;
---color-prussian_blue-800: #054261;
---color-prussian_blue-900: #03283A;
---color-prussian_blue-950: #010D13;
-
-/* Munsell Blue */
---color-munsell_blue: #298E9E;
---color-munsell_blue-5: #DEF5F7;
---color-munsell_blue-25: #DEF5F7;
---color-munsell_blue-50: #BDEBEF;
---color-munsell_blue-100: #F5F9F9;
---color-munsell_blue-200: #E9F3F4;
---color-munsell_blue-300: #5BCDD7;
---color-munsell_blue-400: #3AC3CF;
---color-munsell_blue-500: #2CA9B5;
---color-munsell_blue-600: #248A94;
---color-munsell_blue-700: #1C6C73;
---color-munsell_blue-800: #144D52;
---color-munsell_blue-900: #0C2E31;
---color-munsell_blue-950: #040F10;
-
-/* Primary */
---color-primary: #F7F7F7;
---color-primary-5: #EBEBEB;
---color-primary-25: #E0E0E0;
---color-primary-50: #D6D6D6;
---color-primary-100: #C2C2C2;
---color-primary-200: #ADADAD;
---color-primary-300: #999999;
---color-primary-400: #858585;
---color-primary-500: #707070;
---color-primary-600: #5C5C5C;
---color-primary-700: #474747;
---color-primary-800: #333333;
---color-primary-900: #1F1F1F;
---color-primary-950: #141414;
+/* Fonts arrive as CSS variables from next/font in layout.tsx. */
+@theme inline {
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-anek), var(--font-inter), sans-serif;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  /* Brand ramps, shared with billsane-client. */
+  --color-prussian_blue: #053247;
+  --color-prussian_blue-5: #ecf8fe;
+  --color-prussian_blue-25: #b1e2fb;
+  --color-prussian_blue-50: #8bd4f9;
+  --color-prussian_blue-100: #64c6f7;
+  --color-prussian_blue-200: #54c0f2;
+  --color-prussian_blue-300: #3db8f5;
+  --color-prussian_blue-400: #16a9f3;
+  --color-prussian_blue-500: #0b92d5;
+  --color-prussian_blue-600: #0977ae;
+  --color-prussian_blue-700: #075d88;
+  --color-prussian_blue-800: #054261;
+  --color-prussian_blue-900: #03283a;
+  --color-prussian_blue-950: #010d13;
+
+  --color-munsell_blue: #298e9e;
+  --color-munsell_blue-5: #def5f7;
+  --color-munsell_blue-25: #def5f7;
+  --color-munsell_blue-50: #bdebef;
+  --color-munsell_blue-100: #f5f9f9;
+  --color-munsell_blue-200: #e9f3f4;
+  --color-munsell_blue-300: #5bcdd7;
+  --color-munsell_blue-400: #3ac3cf;
+  --color-munsell_blue-500: #2ca9b5;
+  --color-munsell_blue-600: #248a94;
+  --color-munsell_blue-700: #1c6c73;
+  --color-munsell_blue-800: #144d52;
+  --color-munsell_blue-900: #0c2e31;
+  --color-munsell_blue-950: #040f10;
+
+  --color-primary: #f7f7f7;
+  --color-primary-5: #ebebeb;
+  --color-primary-25: #e0e0e0;
+  --color-primary-50: #d6d6d6;
+  --color-primary-100: #c2c2c2;
+  --color-primary-200: #adadad;
+  --color-primary-300: #999999;
+  --color-primary-400: #858585;
+  --color-primary-500: #707070;
+  --color-primary-600: #5c5c5c;
+  --color-primary-700: #474747;
+  --color-primary-800: #333333;
+  --color-primary-900: #1f1f1f;
+  --color-primary-950: #141414;
+
+  /* Semantic layer. New code reaches for these, not the ramps above. */
+  --color-shell: #062639;
+  --color-shell-raised: #0b3a54;
+  --color-shell-hover: #0e4763;
+  --color-shell-border: #14536f;
+
+  --color-canvas: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f8fafc;
+  --color-surface-muted: #f1f5f9;
+  --color-surface-sunken: #e9eff5;
+
+  --color-line: #e3eaf1;
+  --color-line-strong: #cbd8e3;
+  --color-line-faint: #eef3f8;
+
+  --color-ink: #0c2231;
+  --color-ink-soft: #3f5769;
+  --color-ink-muted: #5c7184;
+  --color-ink-faint: #93a5b4;
+
+  --color-success: #0e9f6e;
+  --color-success-soft: #e6f6f0;
+  --color-success-border: #a7e3cd;
+  --color-success-ink: #07603f;
+  --color-warning: #c77700;
+  --color-warning-soft: #fdf4e3;
+  --color-warning-border: #f2d8a0;
+  --color-warning-ink: #7a4a00;
+  --color-danger: #dc2b2b;
+  --color-danger-soft: #fdecec;
+  --color-danger-border: #f5b9b9;
+  --color-danger-ink: #8e1616;
+  --color-info: #2a78d6;
+  --color-info-soft: #eaf2fd;
+  --color-info-border: #b7d3f5;
+  --color-info-ink: #17457f;
+
+  /* Depth: a 1px ink ring does the edge, a tight drop gives the lift. */
+  --shadow-ring: 0 0 0 1px rgb(12 34 49 / 0.08);
+  --shadow-field: 0 0 0 1px rgb(12 34 49 / 0.11), 0 1px 2px 0 rgb(12 34 49 / 0.05);
+  --shadow-card: 0 0 0 1px rgb(12 34 49 / 0.08), 0 1px 5px -4px rgb(12 34 49 / 0.55),
+    0 4px 8px 0 rgb(12 34 49 / 0.04);
+  --shadow-raised: 0 0 0 1px rgb(12 34 49 / 0.1), 0 2px 6px -3px rgb(12 34 49 / 0.35),
+    0 12px 24px -8px rgb(12 34 49 / 0.12);
+  --shadow-pop: 0 0 0 1px rgb(12 34 49 / 0.08), 0 4px 8px -2px rgb(12 34 49 / 0.06),
+    0 20px 36px -12px rgb(12 34 49 / 0.24);
+  --shadow-btn-primary: inset 0 1px 0 0 rgb(255 255 255 / 0.16), 0 0 0 1px #053247,
+    0 1px 3px -1px rgb(5 50 71 / 0.6), 0 4px 10px -4px rgb(5 50 71 / 0.35);
+  --shadow-btn-accent: inset 0 1px 0 0 rgb(255 255 255 / 0.22), 0 0 0 1px #237f8d,
+    0 1px 3px -1px rgb(28 108 115 / 0.6), 0 4px 10px -4px rgb(41 142 158 / 0.4);
+
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-input, select, textarea {
-  outline: none;
-  @apply w-full px-4 py-3 border rounded-lg focus:outline-none transition-all
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-stretch: 92%;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: rgb(41 142 158 / 0.22);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-munsell_blue);
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(92 113 132 / 0.3);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  /* Bare form controls take the field look, so older pages inherit it. */
+  input:where(:not([type="checkbox"], [type="radio"], [type="range"], [type="file"])),
+  select,
+  textarea {
+    width: 100%;
+    border-radius: 0.75rem;
+    background-color: var(--color-surface);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    box-shadow: var(--shadow-field);
+    transition: box-shadow 150ms var(--ease-snap), background-color 150ms var(--ease-snap);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  input:where(:not([type="checkbox"], [type="radio"])):focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-munsell_blue), 0 0 0 4px rgb(41 142 158 / 0.16);
+  }
+
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-surface-muted);
+    color: var(--color-ink-muted);
+  }
+
+  input[aria-invalid="true"],
+  select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    background-color: var(--color-danger-soft);
+    box-shadow: 0 0 0 1px var(--color-danger-border);
+  }
+
+  input[aria-invalid="true"]:focus,
+  select[aria-invalid="true"]:focus,
+  textarea[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 1px var(--color-danger), 0 0 0 4px rgb(220 43 43 / 0.14);
+  }
+
+  select {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235C7184' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
 }
 
-.input-error {
-  @apply border-red-500;
-}
-.input-success {
-  @apply border-gray-300 focus:border-munsell_blue-500;
+@layer components {
+  /* Legacy hooks still used by the register form. */
+  .input-error {
+    background-color: var(--color-danger-soft);
+    box-shadow: 0 0 0 1px var(--color-danger-border);
+  }
+
+  /* The tear line of a printed bill: BillSane's divider. */
+  .rule-perforated {
+    height: 0;
+    border-top: 1.5px dashed currentColor;
+    opacity: 0.18;
+  }
 }
 
+/* A printed bill: perforated top edge, and on load it feeds out of the
+   window above it once. Reduced motion gets the finished state. */
+@layer components {
+  .bill-paper {
+    -webkit-mask: radial-gradient(circle 5px at 7px 0, transparent 98%, #000 100%) 0 0 / 14px 100% repeat-x;
+    mask: radial-gradient(circle 5px at 7px 0, transparent 98%, #000 100%) 0 0 / 14px 100% repeat-x;
+  }
 
+  @media (prefers-reduced-motion: no-preference) {
+    .bill-print {
+      animation: bill-print 900ms var(--ease-snap) 350ms both;
+    }
+  }
+}
+
+/* Each registration step settles in once; reduced motion skips it. */
+@media (prefers-reduced-motion: no-preference) {
+  .step-enter {
+    animation: step-enter 220ms var(--ease-snap) both;
+  }
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes bill-print {
+  from {
+    transform: translateY(-14%);
+    clip-path: inset(0 0 72% 0);
+  }
+  to {
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
