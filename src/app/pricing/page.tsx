@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import Faq, { type FaqItem } from "@/components/ui/Faq";
 import { type Plan } from "@/components/pricing/PlanCard";
 import PlanGrid from "@/components/pricing/PlanGrid";
+import { PlanGridSkeleton } from "@/components/pricing/PlanSkeleton";
 import { ButtonLink } from "@/components/ui/Button";
 import Section, { SectionHeading } from "@/components/ui/Section";
 import { prisma } from "@/lib/prisma";
@@ -13,18 +16,29 @@ export const metadata: Metadata = {
     "Choose a BillSane plan. One payment, a lifetime license, and the desktop app for macOS, Windows and Linux.",
 };
 
-// Plans are managed in the database (and soon the admin panel), so read them
-// per request rather than baking them into the build.
-export const dynamic = "force-dynamic";
+// Cache and revalidate plans periodically (every 5 minutes) rather than hitting
+// the database synchronously on every request.
+export const revalidate = 300;
 
 type PlansResult = { status: "ok"; plans: Plan[] } | { status: "error" };
 
+const getCachedPlans = unstable_cache(
+  async () => {
+    return prisma.plan.findMany({ where: { isActive: true } });
+  },
+  ["pricing-plans-list"],
+  {
+    revalidate: 300,
+    tags: ["plans"],
+  }
+);
+
 async function getPlans(): Promise<PlansResult> {
   try {
-    const plans = await prisma.plan.findMany({ where: { isActive: true } });
+    const plans = await getCachedPlans();
     return {
       status: "ok",
-      plans: plans.sort((a, b) => Number(a.price) - Number(b.price)),
+      plans: [...plans].sort((a, b) => Number(a.price) - Number(b.price)),
     };
   } catch (error) {
     console.error("Pricing: could not load plans", error);
@@ -68,9 +82,31 @@ function Notice({ title, body }: { title: string; body: string }) {
   );
 }
 
-export default async function PricingPage() {
+async function PlansContainer() {
   const result = await getPlans();
 
+  if (result.status === "error") {
+    return (
+      <Notice
+        title="We couldn't load the plans"
+        body="Something went wrong on our side. Please try again in a moment."
+      />
+    );
+  }
+
+  if (result.status === "ok" && result.plans.length === 0) {
+    return (
+      <Notice
+        title="Plans are being updated"
+        body="New plans will be here shortly. If you'd like to buy now, our team can help."
+      />
+    );
+  }
+
+  return <PlanGrid plans={result.plans} />;
+}
+
+export default function PricingPage() {
   return (
     <>
       <Section>
@@ -87,21 +123,9 @@ export default async function PricingPage() {
         </div>
 
         <div className="mt-12">
-          {result.status === "error" && (
-            <Notice
-              title="We couldn't load the plans"
-              body="Something went wrong on our side. Please try again in a moment."
-            />
-          )}
-          {result.status === "ok" && result.plans.length === 0 && (
-            <Notice
-              title="Plans are being updated"
-              body="New plans will be here shortly. If you'd like to buy now, our team can help."
-            />
-          )}
-          {result.status === "ok" && result.plans.length > 0 && (
-            <PlanGrid plans={result.plans} />
-          )}
+          <Suspense fallback={<PlanGridSkeleton />}>
+            <PlansContainer />
+          </Suspense>
         </div>
       </Section>
 
